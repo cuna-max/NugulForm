@@ -1,0 +1,31 @@
+{
+  "extensionDescription": {
+    "description": "Extension description",
+    "message": "NugulForm is handled by NugulMan, so don't worry."
+  },
+  "extensionName": {
+    "description": "Extension name",
+    "message": "NugulForm"
+  },
+  "toggleTheme": {
+    "message": "Toggle theme"
+  },
+  "injectButton": {
+    "message": "Click to inject content script."
+  },
+  "displayErrorInfo": {
+    "message": "Error occur"
+  },
+  "displayErrorDescription": {
+    "message": "Sorry, something went wrong while loading the page."
+  },
+  "displayErrorDetailsInfo": {
+    "message": "Error details:"
+  },
+  "displayErrorUnknownErrorInfo": {
+    "message": "Unknown error"
+  },
+  "displayErrorReset": {
+    "message": "Run Again"
+  }
+}
