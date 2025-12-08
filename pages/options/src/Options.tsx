@@ -2,7 +2,7 @@ import '@src/Options.css';
 import { t } from '@extension/i18n';
 import { PROJECT_URL_OBJECT, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
-import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from '@extension/ui';
+import { ErrorDisplay, LoadingSpinner, ToggleButton, ThemeProvider } from '@extension/ui';
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
@@ -11,15 +11,17 @@ const Options = () => {
   const goGithubSite = () => chrome.tabs.create(PROJECT_URL_OBJECT);
 
   return (
-    <div className={cn('App', isLight ? 'bg-slate-50 text-gray-900' : 'bg-gray-800 text-gray-100')}>
-      <button onClick={goGithubSite}>
-        <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
-      </button>
-      <p>
-        Edit <code>pages/options/src/Options.tsx</code>
-      </p>
-      <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
-    </div>
+    <ThemeProvider>
+      <div className="App bg-background text-foreground">
+        <button onClick={goGithubSite}>
+          <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
+        </button>
+        <p>
+          Edit <code className="bg-muted text-muted-foreground rounded px-1">pages/options/src/Options.tsx</code>
+        </p>
+        <ToggleButton>{t('toggleTheme')}</ToggleButton>
+      </div>
+    </ThemeProvider>
   );
 };
 

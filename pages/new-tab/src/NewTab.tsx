@@ -3,7 +3,7 @@ import '@src/NewTab.scss';
 import { t } from '@extension/i18n';
 import { PROJECT_URL_OBJECT, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
-import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from '@extension/ui';
+import { ErrorDisplay, LoadingSpinner, ToggleButton, ThemeProvider } from '@extension/ui';
 
 const NewTab = () => {
   const { isLight } = useStorage(exampleThemeStorage);
@@ -12,18 +12,20 @@ const NewTab = () => {
   const goGithubSite = () => chrome.tabs.create(PROJECT_URL_OBJECT);
 
   return (
-    <div className={cn('App', isLight ? 'bg-slate-50' : 'bg-gray-800')}>
-      <header className={cn('App-header', isLight ? 'text-gray-900' : 'text-gray-100')}>
-        <button onClick={goGithubSite}>
-          <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
-        </button>
-        <p>
-          Edit <code>pages/new-tab/src/NewTab.tsx</code>
-        </p>
-        <h6>The color of this paragraph is defined using SASS.</h6>
-        <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
-      </header>
-    </div>
+    <ThemeProvider>
+      <div className="App bg-background">
+        <header className="App-header text-foreground">
+          <button onClick={goGithubSite}>
+            <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
+          </button>
+          <p>
+            Edit <code className="bg-muted text-muted-foreground rounded px-1">pages/new-tab/src/NewTab.tsx</code>
+          </p>
+          <h6 className="text-accent-foreground">The color of this paragraph is defined using SASS.</h6>
+          <ToggleButton>{t('toggleTheme')}</ToggleButton>
+        </header>
+      </div>
+    </ThemeProvider>
   );
 };
 
