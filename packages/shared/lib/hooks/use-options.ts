@@ -9,6 +9,10 @@ import type { UserField, AutoOption } from '@extension/storage';
 
 interface UseUserFieldsReturn {
   userFields: UserField[];
+  /** 값이 있는 필드만 반환 */
+  filledFields: UserField[];
+  /** 값이 없는 필드만 반환 */
+  emptyFields: UserField[];
   updateField: (id: string, value: string) => Promise<void>;
   clearField: (id: string) => Promise<void>;
   getFieldValue: (id: string) => string;
@@ -17,6 +21,9 @@ interface UseUserFieldsReturn {
 
 export const useUserFields = (): UseUserFieldsReturn => {
   const { userFields } = useStorage(optionsStorage);
+
+  const filledFields = useMemo(() => userFields.filter(field => field.value), [userFields]);
+  const emptyFields = useMemo(() => userFields.filter(field => !field.value), [userFields]);
 
   const updateField = useCallback(async (id: string, value: string) => {
     await optionsStorage.updateUserField(id, value);
@@ -51,6 +58,8 @@ export const useUserFields = (): UseUserFieldsReturn => {
 
   return {
     userFields,
+    filledFields,
+    emptyFields,
     updateField,
     clearField,
     getFieldValue,

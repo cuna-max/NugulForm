@@ -21,11 +21,8 @@ export interface PopupActiveProps {
  */
 export const PopupActive = ({ logoUrl }: PopupActiveProps) => {
   const { state } = useExtensionState();
-  const { userFields, copyToClipboard } = useUserFields();
+  const { filledFields, copyToClipboard } = useUserFields();
   const { status, executeAutofill } = useAutofill();
-
-  // 값이 있는 필드만 필터링
-  const savedFields = userFields.filter(field => field.value);
 
   const handleOpenOptions = () => {
     chrome.runtime.openOptionsPage();
@@ -39,9 +36,9 @@ export const PopupActive = ({ logoUrl }: PopupActiveProps) => {
         {/* 저장된 필드 섹션 */}
         <div className="space-y-3">
           <h3 className="text-muted-foreground text-sm">저장된 필드</h3>
-          {savedFields.length > 0 ? (
+          {filledFields.length > 0 ? (
             <div className="space-y-2">
-              {savedFields.map(field => (
+              {filledFields.map(field => (
                 <SavedFieldItem key={field.id} field={field} onCopy={copyToClipboard} onEdit={handleOpenOptions} />
               ))}
             </div>
@@ -57,7 +54,7 @@ export const PopupActive = ({ logoUrl }: PopupActiveProps) => {
         </div>
 
         {/* 자동 채우기 버튼 */}
-        <AutofillButton status={status} onExecute={executeAutofill} disabled={savedFields.length === 0} />
+        <AutofillButton status={status} onExecute={executeAutofill} disabled={filledFields.length === 0} />
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ export interface PopupDisabledProps {
  */
 export const PopupDisabled = ({ logoUrl }: PopupDisabledProps) => {
   const { state } = useExtensionState();
-  const { userFields, updateField } = useUserFields();
+  const { emptyFields, updateField } = useUserFields();
   const { status } = useAutofill();
 
   return (
@@ -32,15 +32,17 @@ export const PopupDisabled = ({ logoUrl }: PopupDisabledProps) => {
         {/* 비활성 안내 메시지 */}
         <DisabledMessage />
 
-        {/* 설정 폼 */}
-        <div className="space-y-3">
-          <h3 className="text-muted-foreground text-sm">작성하지 않은 필드</h3>
+        {/* 작성하지 않은 필드 */}
+        {emptyFields.length > 0 && (
           <div className="space-y-3">
-            {userFields.map(field => (
-              <ConfigFieldInput key={field.id} field={field} onSave={updateField} />
-            ))}
+            <h3 className="text-muted-foreground text-sm">작성하지 않은 필드</h3>
+            <div className="space-y-3">
+              {emptyFields.map(field => (
+                <ConfigFieldInput key={field.id} field={field} onSave={updateField} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
