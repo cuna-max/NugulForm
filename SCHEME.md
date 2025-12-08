@@ -94,7 +94,7 @@ Options 페이지에서 트위터/텔레그램/지갑 주소 등 개인 정보�
 ### 4.2 Disabled 상태
 
 * Popup에서 Options UI만 노출
-* Config 수정만 가능
+* 기입되지 않은 Config 수정만 가능
 * 자동 기입 기능 지원 X
 
 ---

@@ -15,7 +15,7 @@ const OptionsContent = () => {
   const { userFields, updateField, copyToClipboard, clearField } = useUserFields();
   const { autoOptions, toggleOption } = useAutoOptions();
 
-  const logoSrc = chrome.runtime.getURL('nugul-logo.png');
+  const logoSrc = chrome.runtime.getURL('nugul.png');
 
   return (
     <div className="mx-auto max-w-4xl p-6">

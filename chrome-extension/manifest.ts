@@ -81,7 +81,7 @@ const manifest = {
   devtools_page: 'devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', '*.png', '*.ico', 'nugul-active-*.png', 'nugul-disabled-*.png'],
+      resources: ['*.js', '*.css', '*.svg', '*.png', '*.ico'],
       matches: ['*://*/*'],
     },
   ],
