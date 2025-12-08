@@ -23,6 +23,7 @@
     "postinstall": "pnpm ready"
   },
   "dependencies": {
+    "fuse.js": "^7.1.0",
     "react-error-boundary": "^6.0.0"
   },
   "devDependencies": {
