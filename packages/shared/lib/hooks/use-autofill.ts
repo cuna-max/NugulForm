@@ -96,10 +96,11 @@ export const useAutofill = (): UseAutofillReturn => {
       })) as { filledCount: number; missingFieldIds: string[] } | undefined;
 
       // 미기입 필드 계산
+      // Note: Content Script 응답에서 detectedLabel 정보를 제공하지 않으므로 빈 문자열로 설정
       const missingFieldIds = response?.missingFieldIds ?? [];
       const missingFields: MissingField[] = optionsState.userFields
         .filter(field => missingFieldIds.includes(field.id))
-        .map(field => createMissingField(field, field.label));
+        .map(field => createMissingField(field, ''));
 
       // 결과 저장
       const result: AutofillResult = {
