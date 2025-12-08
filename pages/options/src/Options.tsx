@@ -1,28 +1,59 @@
-import '@src/Options.css';
-import { t } from '@extension/i18n';
-import { PROJECT_URL_OBJECT, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import { exampleThemeStorage } from '@extension/storage';
-import { ErrorDisplay, LoadingSpinner, ToggleButton, ThemeProvider } from '@extension/ui';
+import { withErrorBoundary, withSuspense, useUserFields, useAutoOptions } from '@extension/shared';
+import {
+  ErrorDisplay,
+  LoadingSpinner,
+  ThemeProvider,
+  Card,
+  CardContent,
+  Separator,
+  OptionsHeader,
+  UserFieldsSection,
+  AutoOptionsSection,
+} from '@extension/ui';
 
-const Options = () => {
-  const { isLight } = useStorage(exampleThemeStorage);
-  const logo = isLight ? 'options/logo_horizontal.svg' : 'options/logo_horizontal_dark.svg';
+const OptionsContent = () => {
+  const { userFields, updateField, copyToClipboard, clearField } = useUserFields();
+  const { autoOptions, toggleOption } = useAutoOptions();
 
-  const goGithubSite = () => chrome.tabs.create(PROJECT_URL_OBJECT);
+  const logoSrc = chrome.runtime.getURL('nugul-logo.png');
 
   return (
-    <ThemeProvider>
-      <div className="App bg-background text-foreground">
-        <button onClick={goGithubSite}>
-          <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
-        </button>
-        <p>
-          Edit <code className="bg-muted text-muted-foreground rounded px-1">pages/options/src/Options.tsx</code>
-        </p>
-        <ToggleButton>{t('toggleTheme')}</ToggleButton>
-      </div>
-    </ThemeProvider>
+    <div className="mx-auto max-w-4xl p-6">
+      <Card>
+        <OptionsHeader logoSrc={logoSrc} title="NugulForm 설정" description="자동 입력 설정 및 필드 관리" />
+
+        <CardContent className="p-6">
+          <div className="space-y-8">
+            <UserFieldsSection
+              title="사용자 필드"
+              description="자주 사용하는 정보를 저장하세요"
+              userFields={userFields}
+              onSave={updateField}
+              onCopy={copyToClipboard}
+              onClear={clearField}
+            />
+
+            <Separator />
+
+            <AutoOptionsSection
+              title="자동 옵션"
+              description="자동 입력 동작을 설정하세요"
+              autoOptions={autoOptions}
+              onToggle={toggleOption}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
+
+const Options = () => (
+  <ThemeProvider>
+    <div className="bg-background text-foreground min-h-screen">
+      <OptionsContent />
+    </div>
+  </ThemeProvider>
+);
 
 export default withErrorBoundary(withSuspense(Options, <LoadingSpinner />), ErrorDisplay);
