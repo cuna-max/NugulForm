@@ -40,13 +40,21 @@ const manifest = {
   },
   action: {
     default_popup: 'popup/index.html',
-    default_icon: 'icon-34.png',
+    default_icon: {
+      '16': 'nugul-disabled-16.png',
+      '32': 'nugul-disabled-32.png',
+      '48': 'nugul-disabled-48.png',
+      '128': 'nugul-disabled-128.png',
+    },
   },
   chrome_url_overrides: {
     newtab: 'new-tab/index.html',
   },
   icons: {
-    '128': 'icon-128.png',
+    '16': 'nugul-disabled-16.png',
+    '32': 'nugul-disabled-32.png',
+    '48': 'nugul-disabled-48.png',
+    '128': 'nugul-disabled-128.png',
   },
   content_scripts: [
     {
@@ -73,7 +81,7 @@ const manifest = {
   devtools_page: 'devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
+      resources: ['*.js', '*.css', '*.svg', '*.png', '*.ico', 'nugul-active-*.png', 'nugul-disabled-*.png'],
       matches: ['*://*/*'],
     },
   ],
