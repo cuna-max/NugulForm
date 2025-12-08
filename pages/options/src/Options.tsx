@@ -20,7 +20,7 @@ const OptionsContent = () => {
   return (
     <div className="mx-auto max-w-4xl p-6">
       <Card>
-        <OptionsHeader logoSrc={logoSrc} title="NugulForm 설정" description="자동 입력 설정 및 필드 관리" />
+        <OptionsHeader logoSrc={logoSrc} title="너굴폼 설정" description="자동 입력 설정 및 필드 관리" />
 
         <CardContent className="p-6">
           <div className="space-y-8">
