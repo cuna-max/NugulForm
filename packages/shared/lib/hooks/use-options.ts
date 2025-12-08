@@ -20,7 +20,7 @@ interface UseUserFieldsReturn {
 }
 
 export const useUserFields = (): UseUserFieldsReturn => {
-  const { userFields } = useStorage(optionsStorage);
+  const { userFields = [] } = useStorage(optionsStorage);
 
   const filledFields = useMemo(() => userFields.filter(field => field.value), [userFields]);
   const emptyFields = useMemo(() => userFields.filter(field => !field.value), [userFields]);
@@ -79,7 +79,7 @@ interface UseAutoOptionsReturn {
 }
 
 export const useAutoOptions = (): UseAutoOptionsReturn => {
-  const { autoOptions } = useStorage(optionsStorage);
+  const { autoOptions = [] } = useStorage(optionsStorage);
 
   const toggleOption = useCallback(async (id: string) => {
     await optionsStorage.toggleAutoOption(id);
