@@ -46,6 +46,7 @@ export const USER_FIELD_IDS = {
   PHONE: 'phone',
   EVM_WALLET: 'evm_wallet',
   SOLANA_WALLET: 'solana_wallet',
+  /** 추가 가능한 필드 - 추후 확장용 */
 } as const;
 
 export const AUTO_OPTION_IDS = {
