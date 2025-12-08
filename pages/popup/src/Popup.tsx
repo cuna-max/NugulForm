@@ -46,15 +46,13 @@ const Popup = () => {
   const viewType = getPopupViewType(isActive, isFilled);
   const logoUrl = getLogoUrl(viewType);
 
-  const PopupContent = {
-    active: <PopupActive logoUrl={logoUrl} />,
-    disabled: <PopupDisabled logoUrl={logoUrl} />,
-    filled: <PopupFilled logoUrl={logoUrl} />,
-  }[viewType];
-
   return (
     <ThemeProvider>
-      <div className="App bg-background">{PopupContent}</div>
+      <div className="App bg-background">
+        {viewType === 'active' && <PopupActive logoUrl={logoUrl} />}
+        {viewType === 'disabled' && <PopupDisabled logoUrl={logoUrl} />}
+        {viewType === 'filled' && <PopupFilled logoUrl={logoUrl} />}
+      </div>
     </ThemeProvider>
   );
 };
