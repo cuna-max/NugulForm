@@ -61,6 +61,7 @@ export const AUTO_OPTION_IDS = {
 const DEFAULT_USER_FIELDS: UserField[] = [
   { id: USER_FIELD_IDS.TELEGRAM, label: 'Telegram', value: '', placeholder: '@username' },
   { id: USER_FIELD_IDS.TWITTER, label: 'Twitter', value: '', placeholder: '@username' },
+  { id: USER_FIELD_IDS.DISCORD, label: 'Discord', value: '', placeholder: '@username' },
   { id: USER_FIELD_IDS.EMAIL, label: 'Email', value: '', placeholder: 'email@example.com' },
   {
     id: USER_FIELD_IDS.EVM_WALLET,
