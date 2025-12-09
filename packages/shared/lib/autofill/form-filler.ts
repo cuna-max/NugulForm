@@ -59,7 +59,7 @@ const fillTextField = (element: HTMLElement, value: string): boolean => {
  */
 const isPositiveOption = (text: string): boolean => {
   const normalizedText = text.toLowerCase().trim();
-  return POSITIVE_KEYWORDS.some(keyword => normalizedText === keyword || normalizedText.startsWith(keyword));
+  return POSITIVE_KEYWORDS.some(keyword => normalizedText.includes(keyword));
 };
 
 /**
