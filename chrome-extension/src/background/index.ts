@@ -1,8 +1,11 @@
 import 'webextension-polyfill';
 import { exampleThemeStorage, extensionStateStorage, autofillStorage, isSupportedUrl } from '@extension/storage';
 
-/** 마지막으로 활성화된 탭 URL (중복 리셋 방지용) */
-let lastActiveUrl: string | null = null;
+/**
+ * 마지막으로 활성화된 탭 정보 (중복 리셋 방지용)
+ * - tabId와 url을 모두 추적하여 같은 URL의 다른 탭 전환도 감지
+ */
+let lastActiveTab: { tabId: number; url: string } | null = null;
 
 /**
  * 현재 탭 URL에 따라 익스텐션 상태 업데이트
@@ -10,13 +13,16 @@ let lastActiveUrl: string | null = null;
 const updateExtensionState = async (tabId: number, url: string) => {
   const isSupported = isSupportedUrl(url);
 
-  // URL이 변경되었을 때만 autofill 상태 리셋 (탭 전환 또는 페이지 이동)
-  const isUrlChanged = lastActiveUrl !== url;
-  if (isUrlChanged) {
-    lastActiveUrl = url;
-    // 새로운 페이지로 전환 시 autofill 상태 초기화
+  // 탭 ID 또는 URL이 변경되었을 때 autofill 상태 리셋
+  // - 다른 탭으로 전환 (같은 URL이라도)
+  // - 같은 탭에서 다른 페이지로 이동
+  const isTabChanged = lastActiveTab?.tabId !== tabId;
+  const isUrlChanged = lastActiveTab?.url !== url;
+
+  if (isTabChanged || isUrlChanged) {
+    lastActiveTab = { tabId, url };
+    // 새로운 탭 또는 페이지로 전환 시 autofill 상태 초기화
     await autofillStorage.reset();
-    console.log('[NugulForm] Autofill state reset for new page:', url);
   }
 
   if (isSupported) {
