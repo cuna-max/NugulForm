@@ -9,34 +9,40 @@ const rootDir = resolve(import.meta.dirname);
 const srcDir = resolve(rootDir, 'src');
 const matchesDir = resolve(srcDir, 'matches');
 
-const configs = Object.entries(getContentScriptEntries(matchesDir)).map(([name, entry]) => ({
-  name,
-  config: withPageConfig({
-    mode: IS_DEV ? 'development' : undefined,
-    resolve: {
-      alias: {
-        '@src': srcDir,
-      },
-    },
-    publicDir: resolve(rootDir, 'public'),
-    plugins: [IS_DEV && makeEntryPointPlugin()],
-    build: {
-      lib: {
-        name: name,
-        formats: ['iife'],
-        entry,
-        fileName: name,
-      },
-      outDir: resolve(rootDir, '..', '..', 'dist', 'content-ui'),
-    },
-  }),
-}));
+const configs = Object.entries(getContentScriptEntries(matchesDir)).map(([name, entry]) => {
+  // 폴더 이름을 유효한 JS 식별자로 변환 (하이픈을 언더스코어로)
+  const jsIdentifier = name.replace(/-/g, '_');
 
-const builds = configs.map(async ({ name, config }) => {
-  const folder = resolve(matchesDir, name);
+  return {
+    name: jsIdentifier,
+    folderName: name, // 원본 폴더 이름 유지
+    config: withPageConfig({
+      mode: IS_DEV ? 'development' : undefined,
+      resolve: {
+        alias: {
+          '@src': srcDir,
+        },
+      },
+      publicDir: resolve(rootDir, 'public'),
+      plugins: [IS_DEV && makeEntryPointPlugin()],
+      build: {
+        lib: {
+          name: jsIdentifier,
+          formats: ['iife'],
+          entry,
+          fileName: name, // 파일 이름은 원본 유지 (manifest.ts와 일치)
+        },
+        outDir: resolve(rootDir, '..', '..', 'dist', 'content-ui'),
+      },
+    }),
+  };
+});
+
+const builds = configs.map(async ({ folderName, config }) => {
+  const folder = resolve(matchesDir, folderName);
   const args = {
     ['--input']: resolve(folder, 'index.css'),
-    ['--output']: resolve(rootDir, 'dist', name, 'index.css'),
+    ['--output']: resolve(rootDir, 'dist', folderName, 'index.css'),
     ['--config']: resolve(rootDir, 'tailwind.config.ts'),
     ['--watch']: IS_DEV,
   };

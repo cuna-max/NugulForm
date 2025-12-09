@@ -79,4 +79,15 @@ exampleThemeStorage.get().then(theme => {
   console.log('theme', theme);
 });
 
+/**
+ * Popup 열기 요청 처리
+ */
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === 'OPEN_POPUP') {
+    chrome.action.openPopup();
+    sendResponse({ success: true });
+  }
+  return false;
+});
+
 console.log('[NugulForm] Background loaded');

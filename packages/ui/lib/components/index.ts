@@ -5,3 +5,4 @@ export * from './ThemeProvider';
 export * from './ui';
 export * from './options';
 export * from './popup';
+export * from './floatings';
