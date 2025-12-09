@@ -32,6 +32,7 @@ const isInlineFillMessage = (message: unknown): message is InlineFillMessage =>
 
 /**
  * 자동 기입된 필드에 시각적 표시 추가
+ * - text, textarea, radio, checkbox, dropdown 모두 표시
  */
 const markFilledFields = (fieldResults: FieldFillResult[]): void => {
   // 기존 표시 제거
@@ -42,8 +43,8 @@ const markFilledFields = (fieldResults: FieldFillResult[]): void => {
   // 스타일 주입
   injectFilledFieldStyles();
 
-  // 자동 기입된 필드 찾아서 표시
-  const filledResults = fieldResults.filter(result => result.filled && result.userFieldId !== null);
+  // 자동 기입된 필드 찾아서 표시 (filled가 true인 모든 필드)
+  const filledResults = fieldResults.filter(result => result.filled);
   const formFields = parseGoogleFormFields();
 
   for (const result of filledResults) {
@@ -60,15 +61,15 @@ const markFilledFields = (fieldResults: FieldFillResult[]): void => {
 };
 
 /**
- * 자동 채우기 실행 핸들러
+ * 자동 채우기 실행 핸들러 (비동기)
  */
-const handleAutofillExecute = (message: AutofillExecuteMessage) => {
+const handleAutofillExecute = async (message: AutofillExecuteMessage) => {
   console.log('[NugulForm] Executing autofill with options:', {
     fieldsCount: message.userFields.length,
     autoOptionsCount: message.autoOptions.length,
   });
 
-  const result = executeAutofill({
+  const result = await executeAutofill({
     userFields: message.userFields,
     autoOptions: message.autoOptions,
   });
@@ -117,9 +118,14 @@ const setupMessageListener = () => {
 
       try {
         if (isAutofillExecuteMessage(message)) {
-          const result = handleAutofillExecute(message);
-          sendResponse(result);
-          return false;
+          // 비동기 핸들러 - true를 반환하여 비동기 응답 가능하게 함
+          handleAutofillExecute(message)
+            .then(result => sendResponse(result))
+            .catch(error => {
+              console.error('[NugulForm] Error in autofill:', error);
+              sendResponse({ error: String(error) });
+            });
+          return true; // 비동기 응답을 위해 true 반환
         }
 
         if (isInlineFillMessage(message)) {

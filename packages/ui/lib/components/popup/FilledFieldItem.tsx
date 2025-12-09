@@ -41,14 +41,14 @@ export const FilledFieldItem = ({ field, onCopy }: FilledFieldItemProps) => {
   };
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 p-3">
+    <div className="bg-muted/50 hover:bg-muted flex items-center justify-between rounded-md border p-3 transition-colors">
       <div className="flex flex-col gap-0.5">
         <span className="text-foreground text-sm font-medium">{field.fieldLabel}</span>
         <span className="text-muted-foreground text-xs">{field.formLabel}</span>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-muted-foreground max-w-[120px] truncate text-xs">{field.filledValue}</span>
-        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-green-100" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
           {isCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
         </Button>
       </div>

@@ -1,5 +1,7 @@
 /**
  * 자동 기입된 필드에 적용되는 스타일
+ * - 체크 아이콘만 표시 (입력 필드 색상 변경 제거)
+ * - checkbox, dropdown, radio button에도 적용
  */
 
 const FILLED_FIELD_STYLES = `
@@ -9,25 +11,20 @@ const FILLED_FIELD_STYLES = `
   .nugul-filled::before {
     content: '✓';
     position: absolute;
-    top: 8px;
-    right: 8px;
-    color: #10b981;
+    top: 12px;
+    right: 12px;
+    color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
     z-index: 1000;
-    background: white;
+    background: #10b981;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-  .nugul-filled input,
-  .nugul-filled textarea {
-    background-color: #f0fdf4 !important;
-    border-color: #10b981 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 `;
 
