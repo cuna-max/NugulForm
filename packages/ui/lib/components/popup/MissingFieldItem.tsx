@@ -47,13 +47,13 @@ export const MissingFieldItem = ({ field, onCopy, onInlineFill }: MissingFieldIt
   };
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-3">
+    <div className="bg-accent/50 hover:bg-accent/70 flex items-center justify-between rounded-md border p-3 transition-colors">
       <span className="text-foreground text-sm">{field.fieldLabel}</span>
       <div className="flex items-center gap-1.5">
-        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-amber-100" onClick={handleCopy}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
           {isCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
         </Button>
-        <Button variant="ghost" size="sm" className="h-7 text-xs hover:bg-amber-100" onClick={handleInlineFill}>
+        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleInlineFill}>
           바로 기입
         </Button>
       </div>
