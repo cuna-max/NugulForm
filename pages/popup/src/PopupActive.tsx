@@ -33,6 +33,9 @@ export const PopupActive = ({ logoUrl }: PopupActiveProps) => {
       <PopupHeader extensionState={state} autofillStatus={status} logoUrl={logoUrl} />
 
       <div className="space-y-4 p-4">
+        {/* 자동 채우기 버튼 */}
+        <AutofillButton status={status} onExecute={executeAutofill} disabled={filledFields.length === 0} />
+
         {/* 저장된 필드 섹션 */}
         <div className="space-y-3">
           <h3 className="text-muted-foreground text-sm">저장된 필드</h3>
@@ -52,9 +55,6 @@ export const PopupActive = ({ logoUrl }: PopupActiveProps) => {
             </p>
           )}
         </div>
-
-        {/* 자동 채우기 버튼 */}
-        <AutofillButton status={status} onExecute={executeAutofill} disabled={filledFields.length === 0} />
       </div>
     </div>
   );
