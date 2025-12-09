@@ -3,19 +3,11 @@
 // =====================
 
 import { matchFormField } from './field-matcher.js';
-import { fillFormField, fillSelectionField } from './form-filler.js';
+import { fillFormFieldAsync, fillSelectionFieldAsync } from './form-filler.js';
 import { parseGoogleFormFields, isGoogleFormsPage } from './google-forms-parser.js';
-import { AUTO_OPTION_IDS } from '@extension/storage';
+import { getAutoSelectOptions } from '@extension/storage';
 import type { AutofillExecuteOptions, AutofillExecuteResult, FieldFillResult, FieldMapping } from './types.js';
-import type { UserField, AutoOption } from '@extension/storage';
-
-/**
- * 옵션에서 특정 옵션 활성화 여부 확인
- */
-const isOptionEnabled = (autoOptions: AutoOption[], optionId: string): boolean => {
-  const option = autoOptions.find(opt => opt.id === optionId);
-  return option?.enabled ?? false;
-};
+import type { UserField } from '@extension/storage';
 
 /**
  * 폼 필드와 사용자 필드 매핑 생성
@@ -43,9 +35,9 @@ const createFieldMappings = (userFields: UserField[]): FieldMapping[] => {
 };
 
 /**
- * 자동 채우기 실행
+ * 자동 채우기 실행 (비동기)
  */
-export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecuteResult => {
+export const executeAutofill = async (options: AutofillExecuteOptions): Promise<AutofillExecuteResult> => {
   const { userFields, autoOptions } = options;
 
   // Google Forms 페이지가 아니면 빈 결과 반환
@@ -58,8 +50,7 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
     };
   }
 
-  const enablePositiveSelect = isOptionEnabled(autoOptions, AUTO_OPTION_IDS.POSITIVE_AUTO_SELECT);
-  const enableFallback = isOptionEnabled(autoOptions, AUTO_OPTION_IDS.FALLBACK_AUTO_SELECT);
+  const autoSelectOptions = getAutoSelectOptions(autoOptions);
 
   const mappings = createFieldMappings(userFields);
   const fieldResults: FieldFillResult[] = [];
@@ -72,17 +63,14 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
   }> = [];
   let filledCount = 0;
 
-  // 각 필드 처리
+  // 각 필드 순차적으로 처리 (드롭다운 열기/닫기 위해 순차 실행 필요)
   for (const mapping of mappings) {
     const { formField, userField, matchResult } = mapping;
 
     // 텍스트 필드: 매칭된 사용자 필드 값으로 채우기
     if (formField.type === 'text' || formField.type === 'textarea') {
       if (userField && userField.value) {
-        const filled = fillFormField(formField, userField.value, {
-          enablePositiveSelect,
-          enableFallback,
-        });
+        const filled = await fillFormFieldAsync(formField, userField.value, autoSelectOptions);
 
         fieldResults.push({
           formLabel: formField.label,
@@ -129,12 +117,10 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
       }
     }
 
-    // 라디오/체크박스: 긍정 응답 또는 Fallback 선택
-    if (formField.type === 'radio' || formField.type === 'checkbox') {
-      const filled = fillSelectionField(formField.element, {
-        enablePositiveSelect,
-        enableFallback,
-      });
+    // 라디오/체크박스/드롭다운: 긍정 응답 또는 Fallback 선택
+    // POSITIVE_AUTO_SELECT, FALLBACK_AUTO_SELECT 옵션에 따라 동작
+    if (formField.type === 'radio' || formField.type === 'checkbox' || formField.type === 'select') {
+      const filled = await fillSelectionFieldAsync(formField.element, autoSelectOptions);
 
       fieldResults.push({
         formLabel: formField.label,
@@ -146,7 +132,7 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
 
       if (filled) {
         filledCount++;
-        // 라디오/체크박스는 userFieldId가 없지만, formLabel은 있음
+        // 라디오/체크박스/드롭다운은 userFieldId가 없지만, formLabel은 있음
         // 자동 선택된 필드로 표시 (userFieldId는 null로 처리)
       }
     }

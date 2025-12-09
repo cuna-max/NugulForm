@@ -8,6 +8,14 @@ import type { FormOption } from './google-forms-parser.js';
 import type { ParsedFormField } from './types.js';
 
 /**
+ * 지정된 시간(ms) 동안 대기
+ */
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+/** 드롭다운이 열리는데 필요한 대기 시간 (ms) */
+const DROPDOWN_OPEN_DELAY_MS = 150;
+
+/**
  * 이벤트 발생 유틸리티
  * Google Forms는 React로 구성되어 있어 실제 이벤트 발생이 필요
  */
@@ -91,9 +99,84 @@ const clickOption = (element: HTMLElement): boolean => {
 };
 
 /**
- * 라디오/체크박스 필드 채우기
+ * 드롭다운 옵션 선택 (비동기)
+ * - Google Forms의 드롭다운은 listbox/option 구조 사용
+ * - 드롭다운을 먼저 열고, 옵션을 선택해야 함
+ */
+const selectDropdownOptionAsync = async (listbox: HTMLElement, optionElement: HTMLElement): Promise<boolean> => {
+  try {
+    // 이미 선택된 경우 스킵 (aria-selected)
+    if (optionElement.getAttribute('aria-selected') === 'true') {
+      return false;
+    }
+
+    // 1. 드롭다운 열기 (listbox 클릭)
+    listbox.focus();
+    listbox.click();
+
+    // 2. 드롭다운이 열릴 때까지 대기
+    await delay(DROPDOWN_OPEN_DELAY_MS);
+
+    // 3. 옵션 선택
+    optionElement.focus();
+    optionElement.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    optionElement.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+    optionElement.click();
+
+    return true;
+  } catch (error) {
+    console.error('[NugulForm] Failed to select dropdown option:', error);
+    return false;
+  }
+};
+
+/**
+ * 라디오/체크박스 필드 채우기 (비동기)
  * - 긍정 응답 자동 선택 옵션이 켜져있으면 긍정 응답 선택
  * - Fallback 옵션이 켜져있으면 첫 번째 옵션 선택
+ */
+export const fillSelectionFieldAsync = async (
+  element: HTMLElement,
+  options: {
+    enablePositiveSelect: boolean;
+    enableFallback: boolean;
+  },
+): Promise<boolean> => {
+  const formOptions = parseFormOptions(element);
+  if (formOptions.length === 0) return false;
+
+  // 이미 선택된 옵션이 있으면 스킵
+  const hasSelected = formOptions.some(opt => opt.selected);
+  if (hasSelected) return false;
+
+  // 드롭다운인지 확인
+  const isDropdown = element.getAttribute('role') === 'listbox';
+
+  // 1. 긍정 응답 자동 선택
+  if (options.enablePositiveSelect) {
+    const positiveOption = findPositiveOption(formOptions);
+    if (positiveOption) {
+      if (isDropdown) {
+        return selectDropdownOptionAsync(element, positiveOption.element);
+      }
+      return clickOption(positiveOption.element);
+    }
+  }
+
+  // 2. Fallback: 첫 번째 옵션 선택
+  if (options.enableFallback && formOptions.length > 0) {
+    if (isDropdown) {
+      return selectDropdownOptionAsync(element, formOptions[0].element);
+    }
+    return clickOption(formOptions[0].element);
+  }
+
+  return false;
+};
+
+/**
+ * 라디오/체크박스 필드 채우기 (동기 - 드롭다운이 아닌 경우만)
+ * @deprecated 드롭다운 지원을 위해 fillSelectionFieldAsync 사용 권장
  */
 export const fillSelectionField = (
   element: HTMLElement,
@@ -108,6 +191,14 @@ export const fillSelectionField = (
   // 이미 선택된 옵션이 있으면 스킵
   const hasSelected = formOptions.some(opt => opt.selected);
   if (hasSelected) return false;
+
+  // 드롭다운인 경우 비동기 함수 호출 (fire-and-forget)
+  const isDropdown = element.getAttribute('role') === 'listbox';
+  if (isDropdown) {
+    // 비동기로 실행하고 true 반환 (실제 결과는 나중에 완료됨)
+    void fillSelectionFieldAsync(element, options);
+    return true;
+  }
 
   // 1. 긍정 응답 자동 선택
   if (options.enablePositiveSelect) {
@@ -126,16 +217,28 @@ export const fillSelectionField = (
 };
 
 /**
- * 폼 필드 채우기 (메인 함수)
+ * 드롭다운 필드 채우기 (비동기)
+ * - 긍정 응답 자동 선택 또는 Fallback 선택
  */
-export const fillFormField = (
+export const fillDropdownFieldAsync = async (
+  element: HTMLElement,
+  options: {
+    enablePositiveSelect: boolean;
+    enableFallback: boolean;
+  },
+): Promise<boolean> => fillSelectionFieldAsync(element, options);
+
+/**
+ * 폼 필드 채우기 (비동기 - 메인 함수)
+ */
+export const fillFormFieldAsync = async (
   field: ParsedFormField,
   value: string,
   options: {
     enablePositiveSelect: boolean;
     enableFallback: boolean;
   },
-): boolean => {
+): Promise<boolean> => {
   switch (field.type) {
     case 'text':
     case 'textarea':
@@ -156,11 +259,65 @@ export const fillFormField = (
           return clickOption(matchingOption.element);
         }
       }
+      return fillSelectionFieldAsync(field.element, options);
+
+    case 'select':
+      // 드롭다운 처리
+      // value가 있으면 해당 값과 매칭되는 옵션 선택, 없으면 긍정 응답/Fallback 선택
+      if (value) {
+        const formOptions = parseFormOptions(field.element);
+        const matchingOption = formOptions.find(
+          opt =>
+            opt.text.toLowerCase().includes(value.toLowerCase()) ||
+            value.toLowerCase().includes(opt.text.toLowerCase()),
+        );
+        if (matchingOption) {
+          return selectDropdownOptionAsync(field.element, matchingOption.element);
+        }
+      }
+      return fillDropdownFieldAsync(field.element, options);
+
+    default:
+      return false;
+  }
+};
+
+/**
+ * 폼 필드 채우기 (동기 - 호환성 유지)
+ * @deprecated 드롭다운 지원을 위해 fillFormFieldAsync 사용 권장
+ */
+export const fillFormField = (
+  field: ParsedFormField,
+  value: string,
+  options: {
+    enablePositiveSelect: boolean;
+    enableFallback: boolean;
+  },
+): boolean => {
+  switch (field.type) {
+    case 'text':
+    case 'textarea':
+      return fillTextField(field.element, value);
+
+    case 'radio':
+    case 'checkbox':
+      if (value) {
+        const formOptions = parseFormOptions(field.element);
+        const matchingOption = formOptions.find(
+          opt =>
+            opt.text.toLowerCase().includes(value.toLowerCase()) ||
+            value.toLowerCase().includes(opt.text.toLowerCase()),
+        );
+        if (matchingOption) {
+          return clickOption(matchingOption.element);
+        }
+      }
       return fillSelectionField(field.element, options);
 
     case 'select':
-      // 드롭다운은 추후 구현
-      return false;
+      // 드롭다운은 비동기로 처리 (fire-and-forget)
+      void fillFormFieldAsync(field, value, options);
+      return true;
 
     default:
       return false;

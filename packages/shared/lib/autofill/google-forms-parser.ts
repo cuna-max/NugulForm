@@ -6,6 +6,7 @@ import type { ParsedFormField, FormFieldType } from './types.js';
 
 /**
  * Google Forms 선택자 상수
+ * - Google Forms 2025 UI 구조 기준
  */
 const SELECTORS = {
   /** 질문 컨테이너 */
@@ -26,8 +27,11 @@ const SELECTORS = {
   RADIO_GROUP: '[role="radiogroup"]',
   /** 개별 라디오 버튼 */
   RADIO_OPTION: '[role="radio"]',
-  /** 체크박스 컨테이너 */
-  CHECKBOX_GROUP: '[role="group"]',
+  /**
+   * 체크박스 컨테이너
+   * - Google Forms는 체크박스를 role="list" > listitem > checkbox 구조로 사용
+   */
+  CHECKBOX_GROUP: '[role="list"]',
   /** 개별 체크박스 */
   CHECKBOX_OPTION: '[role="checkbox"]',
   /** 드롭다운 */
@@ -57,9 +61,11 @@ const generateElementId = (element: HTMLElement, index: number): string => {
 
 /**
  * 필드 타입 결정
+ * - Google Forms의 실제 DOM 구조 기반
  */
 const determineFieldType = (element: HTMLElement): FormFieldType => {
   const tagName = element.tagName.toLowerCase();
+  const role = element.getAttribute('role');
 
   if (tagName === 'textarea') return 'textarea';
   if (tagName === 'input') {
@@ -68,9 +74,16 @@ const determineFieldType = (element: HTMLElement): FormFieldType => {
     if (type === 'checkbox') return 'checkbox';
     return 'text';
   }
-  if (element.getAttribute('role') === 'listbox') return 'select';
-  if (element.getAttribute('role') === 'radiogroup') return 'radio';
-  if (element.getAttribute('role') === 'checkbox') return 'checkbox';
+
+  // role 기반 타입 결정
+  if (role === 'listbox') return 'select';
+  if (role === 'radiogroup') return 'radio';
+
+  // 체크박스 그룹 감지: role="list"이고 내부에 checkbox가 있는 경우
+  if (role === 'list') {
+    const hasCheckbox = element.querySelector(SELECTORS.CHECKBOX_OPTION);
+    if (hasCheckbox) return 'checkbox';
+  }
 
   return 'text';
 };
@@ -155,9 +168,27 @@ const extractCurrentValue = (element: HTMLElement): string => {
 
 /**
  * 입력 가능한 요소 찾기
+ * - Google Forms의 실제 DOM 구조 기반으로 우선순위 결정
  */
 const findInputElement = (container: Element): HTMLElement | null => {
-  const selectors = [
+  // 1. 라디오 그룹 (객관식 질문 - 단일 선택)
+  const radioGroup = container.querySelector(SELECTORS.RADIO_GROUP);
+  if (radioGroup) return radioGroup as HTMLElement;
+
+  // 2. 드롭다운 (단일 선택)
+  const dropdown = container.querySelector(SELECTORS.DROPDOWN);
+  if (dropdown) return dropdown as HTMLElement;
+
+  // 3. 체크박스 그룹 (다중 선택)
+  // - role="list" 내에 checkbox가 있는 경우
+  const lists = container.querySelectorAll(SELECTORS.CHECKBOX_GROUP);
+  for (const list of Array.from(lists)) {
+    const hasCheckbox = list.querySelector(SELECTORS.CHECKBOX_OPTION);
+    if (hasCheckbox) return list as HTMLElement;
+  }
+
+  // 4. 텍스트 입력 필드
+  const textSelectors = [
     SELECTORS.TEXT_INPUT,
     SELECTORS.EMAIL_INPUT,
     SELECTORS.URL_INPUT,
@@ -166,21 +197,10 @@ const findInputElement = (container: Element): HTMLElement | null => {
     SELECTORS.TEXTAREA,
   ];
 
-  for (const selector of selectors) {
+  for (const selector of textSelectors) {
     const element = container.querySelector(selector);
     if (element) return element as HTMLElement;
   }
-
-  // 라디오/체크박스 그룹
-  const radioGroup = container.querySelector(SELECTORS.RADIO_GROUP);
-  if (radioGroup) return radioGroup as HTMLElement;
-
-  const checkboxGroup = container.querySelector(SELECTORS.CHECKBOX_GROUP);
-  if (checkboxGroup) return checkboxGroup as HTMLElement;
-
-  // 드롭다운
-  const dropdown = container.querySelector(SELECTORS.DROPDOWN);
-  if (dropdown) return dropdown as HTMLElement;
 
   return null;
 };
@@ -219,7 +239,7 @@ export const parseGoogleFormFields = (): ParsedFormField[] => {
 };
 
 /**
- * 라디오/체크박스 옵션 파싱
+ * 라디오/체크박스/드롭다운 옵션 파싱
  */
 export interface FormOption {
   element: HTMLElement;
@@ -227,32 +247,123 @@ export interface FormOption {
   selected: boolean;
 }
 
+/**
+ * 옵션 요소에서 텍스트 추출
+ * - Google Forms는 name 속성 또는 aria-label에 옵션 텍스트를 저장
+ */
+const extractOptionText = (element: HTMLElement): string => {
+  // 1. name 속성에서 추출 (대부분의 경우)
+  const name = element.getAttribute('name');
+  if (name) return name.trim();
+
+  // 2. aria-label에서 추출
+  const ariaLabel = element.getAttribute('aria-label');
+  if (ariaLabel) return ariaLabel.trim();
+
+  // 3. textContent에서 추출 (fallback)
+  return element.textContent?.trim() || '';
+};
+
+/**
+ * 폼 옵션 파싱 (라디오/체크박스/드롭다운)
+ * - Google Forms의 실제 DOM 구조 기반
+ */
 export const parseFormOptions = (container: HTMLElement): FormOption[] => {
   const options: FormOption[] = [];
+  const role = container.getAttribute('role');
 
-  // 라디오 옵션
+  // 1. 드롭다운 옵션 (role="listbox")
+  if (role === 'listbox') {
+    const dropdownOptions = container.querySelectorAll(SELECTORS.DROPDOWN_OPTION);
+    dropdownOptions.forEach(option => {
+      const element = option as HTMLElement;
+      const text = extractOptionText(element);
+
+      // "선택" 같은 placeholder 옵션은 제외
+      if (text && !isPlaceholderOption(text)) {
+        options.push({
+          element,
+          text,
+          selected: element.getAttribute('aria-selected') === 'true',
+        });
+      }
+    });
+    return options;
+  }
+
+  // 2. 라디오 옵션 (role="radiogroup")
+  if (role === 'radiogroup') {
+    const radioOptions = container.querySelectorAll(SELECTORS.RADIO_OPTION);
+    radioOptions.forEach(option => {
+      const element = option as HTMLElement;
+      const text = extractOptionText(element);
+
+      if (text) {
+        options.push({
+          element,
+          text,
+          selected: element.getAttribute('aria-checked') === 'true',
+        });
+      }
+    });
+    return options;
+  }
+
+  // 3. 체크박스 옵션 (role="list" 내 checkbox)
+  if (role === 'list') {
+    const checkboxOptions = container.querySelectorAll(SELECTORS.CHECKBOX_OPTION);
+    checkboxOptions.forEach(option => {
+      const element = option as HTMLElement;
+      const text = extractOptionText(element);
+
+      if (text) {
+        options.push({
+          element,
+          text,
+          selected: element.getAttribute('aria-checked') === 'true',
+        });
+      }
+    });
+    return options;
+  }
+
+  // 4. Fallback: 모든 라디오/체크박스 옵션 검색
   const radioOptions = container.querySelectorAll(SELECTORS.RADIO_OPTION);
   radioOptions.forEach(option => {
     const element = option as HTMLElement;
-    options.push({
-      element,
-      text: element.textContent?.trim() || '',
-      selected: element.getAttribute('aria-checked') === 'true',
-    });
+    const text = extractOptionText(element);
+    if (text) {
+      options.push({
+        element,
+        text,
+        selected: element.getAttribute('aria-checked') === 'true',
+      });
+    }
   });
 
-  // 체크박스 옵션
   const checkboxOptions = container.querySelectorAll(SELECTORS.CHECKBOX_OPTION);
   checkboxOptions.forEach(option => {
     const element = option as HTMLElement;
-    options.push({
-      element,
-      text: element.textContent?.trim() || '',
-      selected: element.getAttribute('aria-checked') === 'true',
-    });
+    const text = extractOptionText(element);
+    if (text) {
+      options.push({
+        element,
+        text,
+        selected: element.getAttribute('aria-checked') === 'true',
+      });
+    }
   });
 
   return options;
+};
+
+/**
+ * 플레이스홀더 옵션인지 확인
+ * - 드롭다운의 "선택" 같은 기본값은 제외
+ */
+const isPlaceholderOption = (text: string): boolean => {
+  const placeholders = ['선택', 'select', 'choose', '선택하세요', '-- 선택 --'];
+  return placeholders.some(p => text.toLowerCase() === p.toLowerCase());
 };
 
 /**

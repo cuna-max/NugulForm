@@ -15,7 +15,13 @@ export { matchFormField, matchFormFields, resetFuseInstance } from './field-matc
 export { parseGoogleFormFields, parseFormOptions, isGoogleFormsPage, type FormOption } from './google-forms-parser.js';
 
 // Form Filler
-export { fillFormField, fillSelectionField, inlineFillField } from './form-filler.js';
+export {
+  fillFormField,
+  fillFormFieldAsync,
+  fillSelectionField,
+  fillSelectionFieldAsync,
+  inlineFillField,
+} from './form-filler.js';
 
 // Autofill Service
 export { executeAutofill } from './autofill-service.js';
