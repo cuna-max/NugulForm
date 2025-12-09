@@ -4,6 +4,10 @@
 # testing
 **/coverage
 
+# pnpm cache
+.pnpm-store
+.pnpm-cache
+
 # build
 **/dist
 **/build

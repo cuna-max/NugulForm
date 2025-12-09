@@ -1,1 +1,2 @@
+export PNPM_DLX_CACHE_DIR="$HOME/.pnpm-cache/dlx"
 pnpm dlx lint-staged --allow-empty
