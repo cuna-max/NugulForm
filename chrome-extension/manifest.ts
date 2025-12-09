@@ -47,9 +47,6 @@ const manifest = {
       '128': 'nugul-disabled-128.png',
     },
   },
-  chrome_url_overrides: {
-    newtab: 'new-tab/index.html',
-  },
   icons: {
     '16': 'nugul-disabled-16.png',
     '32': 'nugul-disabled-32.png',

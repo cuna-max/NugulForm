@@ -75,7 +75,6 @@ pnpm zip
 │   ├── content-runtime/  # 런타임 주입 스크립트
 │   ├── popup/            # 팝업 UI
 │   ├── options/          # 옵션 페이지
-│   ├── new-tab/          # 새 탭 페이지
 │   ├── side-panel/       # 사이드 패널
 │   └── devtools*/        # 개발자 도구
 ├── packages/
