@@ -45,8 +45,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 /**
  * 익스텐션 설치/업데이트 시 현재 활성 탭 상태 초기화
  */
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async details => {
   try {
+    // 최초 설치 시 Options 페이지 열기
+    if (details.reason === 'install') {
+      await chrome.runtime.openOptionsPage();
+    }
+
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (activeTab?.id && activeTab.url) {
       await updateExtensionState(activeTab.id, activeTab.url);
