@@ -9,11 +9,12 @@ import { useEffect, useState } from 'react';
 /**
  * Google Forms용 Content UI App
  * - Google Forms 페이지에서만 플로팅 버튼 표시
- * - 자동 채우기 기능 제공
- * - FLOATING_BUTTON 옵션에 따라 표시 여부 결정
+ * - active 상태에서만 wand 버튼 표시
+ * - filled 상태에서는 플로팅 버튼 숨김
+ * - 자동 채우기 실행 후 popup 자동 열림
  */
 export default function App() {
-  const { isFilled, missingFields, executeAutofill, copyFieldValue, inlineFill } = useAutofillContentUI();
+  const { isFilled, executeAutofill } = useAutofillContentUI();
   const { isFloatingButtonEnabled } = useAutoOptions();
   const [isActive, setIsActive] = useState(false);
 
@@ -24,26 +25,23 @@ export default function App() {
     }
   }, []);
 
-  // Google Forms 페이지가 아니거나 플로팅 버튼이 비활성화된 경우 렌더링하지 않음
-  if (!isActive || !isFloatingButtonEnabled) {
+  // 플로팅 버튼 표시 조건:
+  // 1. Google Forms 페이지 (isActive)
+  // 2. 플로팅 버튼 옵션 활성화
+  // 3. 아직 autofill 실행 전 (!isFilled)
+  if (!isActive || !isFloatingButtonEnabled || isFilled) {
     return null;
   }
 
-  const handleViewInPopup = () => {
-    // Popup 열기
+  const handleAutofill = async () => {
+    await executeAutofill();
+    // autofill 완료 후 popup 자동 열기
     chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
   };
 
   return (
     <ThemeProvider>
-      <FloatingAutofillButton
-        state={isFilled ? 'filled' : 'normal'}
-        missingFields={missingFields}
-        onAutofill={executeAutofill}
-        onCopy={copyFieldValue}
-        onInlineFill={inlineFill}
-        onViewInPopup={handleViewInPopup}
-      />
+      <FloatingAutofillButton onAutofill={handleAutofill} />
     </ThemeProvider>
   );
 }
