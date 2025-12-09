@@ -44,6 +44,7 @@ const manifest = {
       '16': 'nugul-active-16.png',
       '32': 'nugul-active-32.png',
       '48': 'nugul-active-48.png',
+      '64': 'nugul-active-64.png',
       '128': 'nugul-active-128.png',
     },
   },
@@ -51,6 +52,7 @@ const manifest = {
     '16': 'nugul-active-16.png',
     '32': 'nugul-active-32.png',
     '48': 'nugul-active-48.png',
+    '64': 'nugul-active-64.png',
     '128': 'nugul-active-128.png',
   },
   content_scripts: [
