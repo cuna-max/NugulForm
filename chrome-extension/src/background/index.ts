@@ -1,11 +1,23 @@
 import 'webextension-polyfill';
-import { exampleThemeStorage, extensionStateStorage, isSupportedUrl } from '@extension/storage';
+import { exampleThemeStorage, extensionStateStorage, autofillStorage, isSupportedUrl } from '@extension/storage';
+
+/** 마지막으로 활성화된 탭 URL (중복 리셋 방지용) */
+let lastActiveUrl: string | null = null;
 
 /**
  * 현재 탭 URL에 따라 익스텐션 상태 업데이트
  */
 const updateExtensionState = async (tabId: number, url: string) => {
   const isSupported = isSupportedUrl(url);
+
+  // URL이 변경되었을 때만 autofill 상태 리셋 (탭 전환 또는 페이지 이동)
+  const isUrlChanged = lastActiveUrl !== url;
+  if (isUrlChanged) {
+    lastActiveUrl = url;
+    // 새로운 페이지로 전환 시 autofill 상태 초기화
+    await autofillStorage.reset();
+    console.log('[NugulForm] Autofill state reset for new page:', url);
+  }
 
   if (isSupported) {
     await extensionStateStorage.setActive(url);
@@ -32,8 +44,8 @@ chrome.tabs.onActivated.addListener(async activeInfo => {
  * 탭 URL 변경 시 상태 업데이트
  */
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  // URL이 변경되고 페이지 로딩이 완료됐을 때만 처리
-  if (changeInfo.status === 'complete' && tab.url) {
+  // URL이 변경되고 페이지 로딩이 완료됐을 때, 활성 탭인 경우에만 처리
+  if (changeInfo.status === 'complete' && tab.url && tab.active) {
     try {
       await updateExtensionState(tabId, tab.url);
     } catch (error) {
