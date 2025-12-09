@@ -52,7 +52,7 @@ export const PopupHeader = ({ extensionState, autofillStatus, logoUrl }: PopupHe
       <div className="flex items-center justify-between px-4 py-3.5">
         <div className="flex items-center gap-2.5">
           <img src={logoUrl} alt="NugulForm" className="h-7 w-7" />
-          <span className="text-foreground font-medium">NugulForm</span>
+          <span className="text-foreground text-lg font-bold">너굴폼</span>
         </div>
         <Badge variant={variant}>{label}</Badge>
       </div>
