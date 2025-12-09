@@ -1,3 +1,5 @@
+import { ShadowRootContext } from '../contexts/ShadowRootContext.js';
+import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import type { ReactElement } from 'react';
 
@@ -30,5 +32,5 @@ export const initAppWithShadow = ({ id, app, inlineCss }: { id: string; inlineCs
   }
 
   shadowRoot.appendChild(rootIntoShadow);
-  createRoot(rootIntoShadow).render(app);
+  createRoot(rootIntoShadow).render(React.createElement(ShadowRootContext.Provider, { value: shadowRoot }, app));
 };

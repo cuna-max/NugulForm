@@ -1,5 +1,6 @@
 import { MissingFieldsPopover } from './MissingFieldsPopover';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Popover, PopoverTrigger } from '../ui/popover';
+import { PopoverContentShadow } from '../ui/popover-shadow';
 import { Wand2, Check } from 'lucide-react';
 import { useState } from 'react';
 import type { MissingField } from '@extension/storage';
@@ -117,14 +118,14 @@ export const FloatingAutofillButton = ({
             </button>
           </PopoverTrigger>
 
-          <PopoverContent side="left" align="end" className="w-auto p-0">
+          <PopoverContentShadow side="top" align="end" className="w-auto p-0">
             <MissingFieldsPopover
               missingFields={missingFields}
               onCopy={onCopy}
               onInlineFill={onInlineFill}
               onViewInPopup={onViewInPopup}
             />
-          </PopoverContent>
+          </PopoverContentShadow>
         </Popover>
       ) : (
         <button
