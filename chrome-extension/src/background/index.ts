@@ -93,5 +93,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return false;
 });
-
-console.log('[NugulForm] Background loaded');

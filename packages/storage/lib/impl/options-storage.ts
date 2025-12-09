@@ -55,6 +55,65 @@ export const AUTO_OPTION_IDS = {
   FLOATING_BUTTON: 'floatingButton',
 } as const;
 
+/**
+ * 자동 선택 관련 옵션 ID 목록
+ * - radio, checkbox, switch에서 사용
+ * - 자동 입력 시에만 실행됨
+ */
+export const AUTO_SELECT_OPTION_IDS = [
+  AUTO_OPTION_IDS.POSITIVE_AUTO_SELECT,
+  AUTO_OPTION_IDS.FALLBACK_AUTO_SELECT,
+] as const;
+
+/**
+ * UI 표시 관련 옵션 ID 목록
+ */
+export const UI_OPTION_IDS = [AUTO_OPTION_IDS.FLOATING_BUTTON] as const;
+
+export type AutoOptionId = (typeof AUTO_OPTION_IDS)[keyof typeof AUTO_OPTION_IDS];
+export type AutoSelectOptionId = (typeof AUTO_SELECT_OPTION_IDS)[number];
+export type UIOptionId = (typeof UI_OPTION_IDS)[number];
+
+// =====================
+// Option Helpers
+// =====================
+
+/**
+ * 특정 옵션이 활성화되어 있는지 확인
+ */
+export const isOptionEnabled = (autoOptions: AutoOption[], optionId: string): boolean => {
+  const option = autoOptions.find(opt => opt.id === optionId);
+  return option?.enabled ?? false;
+};
+
+/**
+ * 긍정 응답 자동 선택 옵션이 활성화되어 있는지 확인
+ * - radio, checkbox, switch에서 긍정 응답(예, Yes, OK 등)을 자동 선택
+ */
+export const isPositiveAutoSelectEnabled = (autoOptions: AutoOption[]): boolean =>
+  isOptionEnabled(autoOptions, AUTO_OPTION_IDS.POSITIVE_AUTO_SELECT);
+
+/**
+ * Fallback 자동 선택 옵션이 활성화되어 있는지 확인
+ * - 긍정 응답이 없을 때 첫 번째 선택지를 자동 선택
+ */
+export const isFallbackAutoSelectEnabled = (autoOptions: AutoOption[]): boolean =>
+  isOptionEnabled(autoOptions, AUTO_OPTION_IDS.FALLBACK_AUTO_SELECT);
+
+/**
+ * 플로팅 버튼 표시 옵션이 활성화되어 있는지 확인
+ */
+export const isFloatingButtonEnabled = (autoOptions: AutoOption[]): boolean =>
+  isOptionEnabled(autoOptions, AUTO_OPTION_IDS.FLOATING_BUTTON);
+
+/**
+ * 자동 선택 옵션들 가져오기 (radio, checkbox, switch에서 사용)
+ */
+export const getAutoSelectOptions = (autoOptions: AutoOption[]) => ({
+  enablePositiveSelect: isPositiveAutoSelectEnabled(autoOptions),
+  enableFallback: isFallbackAutoSelectEnabled(autoOptions),
+});
+
 // =====================
 // Default Values
 // =====================
@@ -84,13 +143,13 @@ const DEFAULT_AUTO_OPTIONS: AutoOption[] = [
   {
     id: AUTO_OPTION_IDS.POSITIVE_AUTO_SELECT,
     title: '긍정 응답 자동 선택',
-    description: '긍정적인 선택지를 자동으로 선택합니다. (예: 네, 예, Yes, Y, OK)',
+    description: '긍정적인 선택지를 자동으로 선택합니다. (예: 네, Yes, OK 등)',
     enabled: true,
   },
   {
     id: AUTO_OPTION_IDS.FALLBACK_AUTO_SELECT,
     title: '기본 응답 자동 선택',
-    description: '필수 항목이 비어있을 때 기본값을 사용합니다.',
+    description: '필수 항목이 비어있을 때 첫번째 선택지를 사용합니다.',
     enabled: false,
   },
   {

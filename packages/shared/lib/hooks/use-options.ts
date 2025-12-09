@@ -1,5 +1,11 @@
 import { useStorage } from './use-storage.js';
-import { optionsStorage } from '@extension/storage';
+import {
+  optionsStorage,
+  isPositiveAutoSelectEnabled,
+  isFallbackAutoSelectEnabled,
+  isFloatingButtonEnabled,
+  getAutoSelectOptions,
+} from '@extension/storage';
 import { useCallback, useMemo } from 'react';
 import type { UserField, AutoOption } from '@extension/storage';
 
@@ -76,6 +82,14 @@ interface UseAutoOptionsReturn {
   toggleOption: (id: string) => Promise<void>;
   setOption: (id: string, enabled: boolean) => Promise<void>;
   isOptionEnabled: (id: string) => boolean;
+  /** 긍정 응답 자동 선택 활성화 여부 */
+  isPositiveAutoSelectEnabled: boolean;
+  /** Fallback 자동 선택 활성화 여부 */
+  isFallbackAutoSelectEnabled: boolean;
+  /** 플로팅 버튼 표시 활성화 여부 */
+  isFloatingButtonEnabled: boolean;
+  /** 자동 선택 옵션들 (radio, checkbox, switch용) */
+  autoSelectOptions: { enablePositiveSelect: boolean; enableFallback: boolean };
 }
 
 export const useAutoOptions = (): UseAutoOptionsReturn => {
@@ -89,7 +103,7 @@ export const useAutoOptions = (): UseAutoOptionsReturn => {
     await optionsStorage.setAutoOption(id, enabled);
   }, []);
 
-  const isOptionEnabled = useCallback(
+  const isOptionEnabledFn = useCallback(
     (id: string) => {
       const option = autoOptions.find(o => o.id === id);
       return option?.enabled ?? false;
@@ -97,11 +111,20 @@ export const useAutoOptions = (): UseAutoOptionsReturn => {
     [autoOptions],
   );
 
+  const positiveAutoSelectEnabled = useMemo(() => isPositiveAutoSelectEnabled(autoOptions), [autoOptions]);
+  const fallbackAutoSelectEnabled = useMemo(() => isFallbackAutoSelectEnabled(autoOptions), [autoOptions]);
+  const floatingButtonEnabled = useMemo(() => isFloatingButtonEnabled(autoOptions), [autoOptions]);
+  const autoSelectOpts = useMemo(() => getAutoSelectOptions(autoOptions), [autoOptions]);
+
   return {
     autoOptions,
     toggleOption,
     setOption,
-    isOptionEnabled,
+    isOptionEnabled: isOptionEnabledFn,
+    isPositiveAutoSelectEnabled: positiveAutoSelectEnabled,
+    isFallbackAutoSelectEnabled: fallbackAutoSelectEnabled,
+    isFloatingButtonEnabled: floatingButtonEnabled,
+    autoSelectOptions: autoSelectOpts,
   };
 };
 
