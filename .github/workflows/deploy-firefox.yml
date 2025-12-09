@@ -1,0 +1,124 @@
+name: Deploy Firefox Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Extension version (e.g., 1.0.0)'
+        required: false
+        type: string
+  release:
+    types: [published]
+  workflow_call:
+    inputs:
+      version:
+        description: 'Extension version (e.g., 1.0.0)'
+        required: false
+        type: string
+
+env:
+  FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+  FIREFOX_API_KEY: ${{ secrets.FIREFOX_API_KEY }}
+  FIREFOX_API_SECRET: ${{ secrets.FIREFOX_API_SECRET }}
+
+jobs:
+  deploy:
+    name: Build and Deploy to Firefox Add-ons
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            # Remove 'v' prefix if present
+            VERSION="${VERSION#v}"
+          elif [ "${{ github.event_name }}" == "workflow_call" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+
+          # If version is still empty, try to get from package.json
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -o '"version": "[^"]*"' package.json | cut -d'"' -f4)
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Update version in package.json
+        run: |
+          bash bash-scripts/update_version.sh "${{ steps.version.outputs.version }}"
+
+      - name: Build Firefox extension
+        run: pnpm build:firefox
+
+      - name: Create XPI archive
+        run: pnpm zip:firefox
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension-xpi
+          path: dist-zip/*.xpi
+          retention-days: 7
+
+      - name: Install web-ext
+        run: npm install -g web-ext
+
+      - name: Sign and submit to Firefox Add-ons
+        run: |
+          XPI_FILE=$(ls dist-zip/*.xpi | head -n 1)
+
+          # Use web-ext sign command to submit to Firefox Add-ons
+          # This will automatically sign and submit the extension
+          web-ext sign \
+            --api-key "${{ env.FIREFOX_API_KEY }}" \
+            --api-secret "${{ env.FIREFOX_API_SECRET }}" \
+            --source-dir dist \
+            --artifacts-dir dist-zip \
+            --channel listed \
+            --timeout 600 || {
+              echo "Firefox submission failed or timed out"
+              exit 1
+            }
+
+          echo "Firefox extension submitted successfully"
+
+      - name: Update GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          name: Firefox Extension ${{ steps.version.outputs.version }}
+          body: |
+            ## Firefox Add-ons 배포 완료 ✅
+
+            **버전:** ${{ steps.version.outputs.version }}  
+            **배포 시간:** ${{ github.event.release.published_at }}
+
+            Firefox Add-ons에서 확인하세요: https://addons.mozilla.org/firefox/addon/${{ env.FIREFOX_EXTENSION_ID }}
+          draft: false
+          prerelease: false

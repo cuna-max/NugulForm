@@ -110,6 +110,57 @@ pnpm zip
 - `ko/messages.json` - 한국어
 - `en/messages.json` - 영어
 
+## 🚢 배포
+
+프로젝트는 GitHub Actions를 통해 자동 배포를 지원합니다.
+
+### 자동 배포 워크플로우
+
+1. **버전 릴리즈 워크플로우** - 버전 관리 및 자동 배포 트리거
+2. **Chrome Web Store 배포** - Chrome 확장 프로그램 자동 배포
+3. **Firefox Add-ons 배포** - Firefox 확장 프로그램 자동 배포
+
+### 배포 방법
+
+#### 방법 1: GitHub Actions에서 수동 실행 (권장)
+
+1. GitHub 저장소의 **Actions** 탭으로 이동
+2. **Version Release Workflow** 선택
+3. **Run workflow** 클릭
+4. 새 버전 입력 (예: `1.0.0`)
+5. **Run workflow** 클릭
+
+이렇게 하면 자동으로:
+- 모든 `package.json` 파일의 버전 업데이트
+- Git 태그 생성
+- GitHub 릴리즈 생성
+- Chrome 및 Firefox 배포 자동 트리거
+
+#### 방법 2: Git 태그로 트리거
+
+```bash
+# 로컬에서 태그 생성 및 푸시
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### 필요한 GitHub Secrets
+
+배포를 위해 다음 시크릿을 설정해야 합니다:
+
+**Chrome Web Store:**
+- `CHROME_EXTENSION_ID`
+- `CHROME_CLIENT_ID`
+- `CHROME_CLIENT_SECRET`
+- `CHROME_REFRESH_TOKEN`
+
+**Firefox Add-ons:**
+- `FIREFOX_EXTENSION_ID`
+- `FIREFOX_API_KEY`
+- `FIREFOX_API_SECRET`
+
+자세한 설정 방법은 [배포 가이드](.github/DEPLOYMENT.md)를 참고하세요.
+
 ## 📝 라이선스
 
 MIT License

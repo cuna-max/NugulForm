@@ -1,0 +1,151 @@
+name: Deploy Chrome Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Extension version (e.g., 1.0.0)'
+        required: false
+        type: string
+  release:
+    types: [published]
+  workflow_call:
+    inputs:
+      version:
+        description: 'Extension version (e.g., 1.0.0)'
+        required: false
+        type: string
+
+env:
+  CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+  CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+  CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+  CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+jobs:
+  deploy:
+    name: Build and Deploy to Chrome Web Store
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            # Remove 'v' prefix if present
+            VERSION="${VERSION#v}"
+          elif [ "${{ github.event_name }}" == "workflow_call" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+
+          # If version is still empty, try to get from package.json
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -o '"version": "[^"]*"' package.json | cut -d'"' -f4)
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Update version in package.json
+        run: |
+          bash bash-scripts/update_version.sh "${{ steps.version.outputs.version }}"
+
+      - name: Build Chrome extension
+        run: pnpm build
+
+      - name: Create ZIP archive
+        run: pnpm zip
+
+      - name: Upload extension to Chrome Web Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-zip
+          path: dist-zip/*.zip
+          retention-days: 7
+
+      - name: Get Chrome Web Store access token
+        id: chrome_token
+        run: |
+          TOKEN_RESPONSE=$(curl -X POST \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=${{ env.CHROME_CLIENT_ID }}" \
+            -d "client_secret=${{ env.CHROME_CLIENT_SECRET }}" \
+            -d "refresh_token=${{ env.CHROME_REFRESH_TOKEN }}" \
+            -d "grant_type=refresh_token" \
+            "https://oauth2.googleapis.com/token")
+
+          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+          echo "token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Upload new version to Chrome Web Store
+        run: |
+          ZIP_FILE=$(ls dist-zip/*.zip | head -n 1)
+
+          UPLOAD_RESPONSE=$(curl -X PUT \
+            -H "Authorization: Bearer ${{ steps.chrome_token.outputs.token }}" \
+            -H "x-goog-api-version: 2" \
+            -F "package=@$ZIP_FILE" \
+            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${{ env.CHROME_EXTENSION_ID }}")
+
+          UPLOAD_STATE=$(echo $UPLOAD_RESPONSE | jq -r '.uploadState')
+          echo "Upload state: $UPLOAD_STATE"
+
+          if [ "$UPLOAD_STATE" != "SUCCESS" ]; then
+            echo "Upload failed: $UPLOAD_RESPONSE"
+            exit 1
+          fi
+
+      - name: Publish extension
+        run: |
+          PUBLISH_RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ steps.chrome_token.outputs.token }}" \
+            -H "x-goog-api-version: 2" \
+            -H "Content-Length: 0" \
+            "https://www.googleapis.com/chromewebstore/v1.1/items/${{ env.CHROME_EXTENSION_ID }}/publish")
+
+          PUBLISH_STATUS=$(echo $PUBLISH_RESPONSE | jq -r '.status[0]')
+          echo "Publish status: $PUBLISH_STATUS"
+
+          if [ "$PUBLISH_STATUS" != "OK" ]; then
+            echo "Publish failed: $PUBLISH_RESPONSE"
+            exit 1
+          fi
+
+      - name: Update GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          name: Chrome Extension ${{ steps.version.outputs.version }}
+          body: |
+            ## Chrome Web Store 배포 완료 ✅
+
+            **버전:** ${{ steps.version.outputs.version }}  
+            **배포 시간:** ${{ github.event.release.published_at }}
+
+            Chrome Web Store에서 확인하세요: https://chrome.google.com/webstore/detail/${{ env.CHROME_EXTENSION_ID }}
+          draft: false
+          prerelease: false
