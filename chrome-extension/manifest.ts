@@ -41,17 +41,17 @@ const manifest = {
   action: {
     default_popup: 'popup/index.html',
     default_icon: {
-      '16': 'nugul-disabled-16.png',
-      '32': 'nugul-disabled-32.png',
-      '48': 'nugul-disabled-48.png',
-      '128': 'nugul-disabled-128.png',
+      '16': 'nugul-active-16.png',
+      '32': 'nugul-active-32.png',
+      '48': 'nugul-active-48.png',
+      '128': 'nugul-active-128.png',
     },
   },
   icons: {
-    '16': 'nugul-disabled-16.png',
-    '32': 'nugul-disabled-32.png',
-    '48': 'nugul-disabled-48.png',
-    '128': 'nugul-disabled-128.png',
+    '16': 'nugul-active-16.png',
+    '32': 'nugul-active-32.png',
+    '48': 'nugul-active-48.png',
+    '128': 'nugul-active-128.png',
   },
   content_scripts: [
     {

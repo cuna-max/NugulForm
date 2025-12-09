@@ -2,33 +2,15 @@ import 'webextension-polyfill';
 import { exampleThemeStorage, extensionStateStorage, isSupportedUrl } from '@extension/storage';
 
 /**
- * 아이콘 경로 상수
- */
-const ICON_PATHS = {
-  active: {
-    '16': 'nugul-active-16.png',
-    '32': 'nugul-active-32.png',
-    '48': 'nugul-active-48.png',
-  },
-  disabled: {
-    '16': 'nugul-disabled-16.png',
-    '32': 'nugul-disabled-32.png',
-    '48': 'nugul-disabled-48.png',
-  },
-} as const;
-
-/**
- * 현재 탭 URL에 따라 익스텐션 상태 및 아이콘 업데이트
+ * 현재 탭 URL에 따라 익스텐션 상태 업데이트
  */
 const updateExtensionState = async (tabId: number, url: string) => {
   const isSupported = isSupportedUrl(url);
 
   if (isSupported) {
     await extensionStateStorage.setActive(url);
-    await chrome.action.setIcon({ tabId, path: ICON_PATHS.active });
   } else {
     await extensionStateStorage.setDisabled(url);
-    await chrome.action.setIcon({ tabId, path: ICON_PATHS.disabled });
   }
 };
 
