@@ -1,7 +1,7 @@
 import { useStorage } from './use-storage.js';
 import { autofillStorage, optionsStorage } from '@extension/storage';
 import { useCallback } from 'react';
-import type { AutofillStatus, AutofillResult, MissingField, UserField } from '@extension/storage';
+import type { AutofillStatus, AutofillResult, MissingField, FilledField, UserField } from '@extension/storage';
 
 // =====================
 // Types
@@ -16,6 +16,8 @@ export interface UseAutofillReturn {
   isFilled: boolean;
   /** 미기입 필드 목록 */
   missingFields: MissingField[];
+  /** 자동 기입된 필드 목록 */
+  filledFields: FilledField[];
   /** 자동 채우기 실행 */
   executeAutofill: () => Promise<void>;
   /** 상태 초기화 */
@@ -79,6 +81,7 @@ export const useAutofill = (): UseAutofillReturn => {
 
   const isFilled = autofillState.status === 'filled';
   const missingFields = autofillState.result?.missingFields ?? [];
+  const filledFields = autofillState.result?.filledFields ?? [];
 
   /**
    * 자동 채우기 실행
@@ -93,7 +96,13 @@ export const useAutofill = (): UseAutofillReturn => {
         type: AUTOFILL_MESSAGE_TYPE,
         userFields: optionsState.userFields,
         autoOptions: optionsState.autoOptions,
-      })) as { filledCount: number; missingFieldIds: string[] } | undefined;
+      })) as
+        | {
+            filledCount: number;
+            missingFieldIds: string[];
+            filledFields: Array<{ fieldId: string; formLabel: string; fieldLabel: string; filledValue: string }>;
+          }
+        | undefined;
 
       // 미기입 필드 계산
       // Note: Content Script 응답에서 detectedLabel 정보를 제공하지 않으므로 빈 문자열로 설정
@@ -102,10 +111,19 @@ export const useAutofill = (): UseAutofillReturn => {
         .filter(field => missingFieldIds.includes(field.id))
         .map(field => createMissingField(field, ''));
 
+      // 자동 기입된 필드 변환
+      const filledFields: FilledField[] = (response?.filledFields ?? []).map(field => ({
+        fieldId: field.fieldId,
+        formLabel: field.formLabel,
+        fieldLabel: field.fieldLabel,
+        filledValue: field.filledValue,
+      }));
+
       // 결과 저장
       const result: AutofillResult = {
         filledCount: response?.filledCount ?? 0,
         missingFields,
+        filledFields,
         timestamp: Date.now(),
         tabId,
       };
@@ -118,6 +136,7 @@ export const useAutofill = (): UseAutofillReturn => {
       await autofillStorage.setFilled({
         filledCount: 0,
         missingFields: [],
+        filledFields: [],
         timestamp: Date.now(),
         tabId: null,
       });
@@ -164,14 +183,30 @@ export const useAutofill = (): UseAutofillReturn => {
           value: field.value,
         });
 
-        // 미기입 필드에서 해당 필드 제거
+        // 미기입 필드에서 해당 필드 제거하고 filledFields에 추가
         if (autofillState.result) {
           const updatedMissingFields = autofillState.result.missingFields.filter(f => f.fieldId !== fieldId);
+          const field = optionsState.userFields.find(f => f.id === fieldId);
+
+          // 이미 filledFields에 있는지 확인
+          const isAlreadyFilled = autofillState.result.filledFields.some(f => f.fieldId === fieldId);
+          const updatedFilledFields = isAlreadyFilled
+            ? autofillState.result.filledFields
+            : [
+                ...autofillState.result.filledFields,
+                {
+                  fieldId: fieldId,
+                  formLabel: '', // 인라인 필의 경우 formLabel을 알 수 없음
+                  fieldLabel: field?.label || '',
+                  filledValue: field?.value || '',
+                },
+              ];
 
           await autofillStorage.setFilled({
             ...autofillState.result,
             filledCount: autofillState.result.filledCount + 1,
             missingFields: updatedMissingFields,
+            filledFields: updatedFilledFields,
           });
         }
       } catch (error) {
@@ -186,6 +221,7 @@ export const useAutofill = (): UseAutofillReturn => {
     result: autofillState.result,
     isFilled,
     missingFields,
+    filledFields,
     executeAutofill,
     reset,
     copyFieldValue,

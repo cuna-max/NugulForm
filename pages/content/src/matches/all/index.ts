@@ -3,8 +3,15 @@
 // Google Forms 자동 채우기 기능
 // =====================
 
-import { executeAutofill, inlineFillField, isGoogleFormsPage, MESSAGE_TYPES } from '@extension/shared';
-import type { AutofillExecuteMessage, InlineFillMessage } from '@extension/shared';
+import { injectFilledFieldStyles } from './filled-field-styles';
+import {
+  executeAutofill,
+  inlineFillField,
+  isGoogleFormsPage,
+  MESSAGE_TYPES,
+  parseGoogleFormFields,
+} from '@extension/shared';
+import type { AutofillExecuteMessage, InlineFillMessage, FieldFillResult } from '@extension/shared';
 
 console.log('[NugulForm] Content script loaded');
 
@@ -24,6 +31,35 @@ const isInlineFillMessage = (message: unknown): message is InlineFillMessage =>
   (message as { type: string }).type === MESSAGE_TYPES.INLINE_FILL;
 
 /**
+ * 자동 기입된 필드에 시각적 표시 추가
+ */
+const markFilledFields = (fieldResults: FieldFillResult[]): void => {
+  // 기존 표시 제거
+  document.querySelectorAll('.nugul-filled').forEach(el => {
+    el.classList.remove('nugul-filled');
+  });
+
+  // 스타일 주입
+  injectFilledFieldStyles();
+
+  // 자동 기입된 필드 찾아서 표시
+  const filledResults = fieldResults.filter(result => result.filled && result.userFieldId !== null);
+  const formFields = parseGoogleFormFields();
+
+  for (const result of filledResults) {
+    // formLabel로 해당 필드 찾기
+    const formField = formFields.find(f => f.label === result.formLabel);
+    if (formField && formField.element) {
+      // 필드 컨테이너 찾기 (Google Forms 구조에 맞게)
+      const container = formField.element.closest('[data-params]');
+      if (container) {
+        container.classList.add('nugul-filled');
+      }
+    }
+  }
+};
+
+/**
  * 자동 채우기 실행 핸들러
  */
 const handleAutofillExecute = (message: AutofillExecuteMessage) => {
@@ -40,11 +76,16 @@ const handleAutofillExecute = (message: AutofillExecuteMessage) => {
   console.log('[NugulForm] Autofill result:', {
     filledCount: result.filledCount,
     missingFieldIds: result.missingFieldIds,
+    filledFieldsCount: result.filledFields.length,
   });
+
+  // 자동 기입된 필드에 시각적 표시 추가
+  markFilledFields(result.fieldResults);
 
   return {
     filledCount: result.filledCount,
     missingFieldIds: result.missingFieldIds,
+    filledFields: result.filledFields,
   };
 };
 

@@ -21,9 +21,10 @@ export interface PopupFilledProps {
  */
 export const PopupFilled = ({ logoUrl }: PopupFilledProps) => {
   const { state } = useExtensionState();
-  const { status, missingFields, copyFieldValue, inlineFill, reset } = useAutofill();
+  const { status, missingFields, filledFields, copyFieldValue, inlineFill, reset } = useAutofill();
 
   const hasMissingFields = missingFields.length > 0;
+  const hasFilledFields = filledFields.length > 0;
 
   return (
     <div className="bg-background w-[360px] overflow-hidden rounded-lg border shadow-lg">
@@ -41,9 +42,11 @@ export const PopupFilled = ({ logoUrl }: PopupFilledProps) => {
             </div>
           </div>
         ) : (
-          <div className="py-4 text-center">
-            <p className="text-muted-foreground text-sm">모든 필드가 성공적으로 입력되었습니다!</p>
-          </div>
+          !hasFilledFields && (
+            <div className="py-4 text-center">
+              <p className="text-muted-foreground text-sm">모든 필드가 성공적으로 입력되었습니다!</p>
+            </div>
+          )
         )}
 
         {/* 다시 입력하기 버튼 */}

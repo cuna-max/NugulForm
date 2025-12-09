@@ -54,6 +54,7 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
       filledCount: 0,
       missingFieldIds: [],
       fieldResults: [],
+      filledFields: [],
     };
   }
 
@@ -63,6 +64,12 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
   const mappings = createFieldMappings(userFields);
   const fieldResults: FieldFillResult[] = [];
   const missingFieldIds: string[] = [];
+  const filledFields: Array<{
+    fieldId: string;
+    formLabel: string;
+    fieldLabel: string;
+    filledValue: string;
+  }> = [];
   let filledCount = 0;
 
   // 각 필드 처리
@@ -87,6 +94,13 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
 
         if (filled) {
           filledCount++;
+          // 자동 기입된 필드 정보 추가
+          filledFields.push({
+            fieldId: userField.id,
+            formLabel: formField.label,
+            fieldLabel: userField.label,
+            filledValue: userField.value,
+          });
         } else if (matchResult) {
           // 매칭은 됐지만 채우기 실패 (기존 값 존재 등)
           missingFieldIds.push(userField.id);
@@ -132,6 +146,8 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
 
       if (filled) {
         filledCount++;
+        // 라디오/체크박스는 userFieldId가 없지만, formLabel은 있음
+        // 자동 선택된 필드로 표시 (userFieldId는 null로 처리)
       }
     }
   }
@@ -150,6 +166,7 @@ export const executeAutofill = (options: AutofillExecuteOptions): AutofillExecut
     filledCount,
     missingFieldIds: [...new Set(missingFieldIds)], // 중복 제거
     fieldResults,
+    filledFields,
   };
 };
 

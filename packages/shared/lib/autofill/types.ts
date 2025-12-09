@@ -75,6 +75,13 @@ export interface AutofillExecuteResult {
   missingFieldIds: string[];
   /** 필드별 상세 결과 */
   fieldResults: FieldFillResult[];
+  /** 자동 기입된 필드 정보 목록 */
+  filledFields: Array<{
+    fieldId: string;
+    formLabel: string;
+    fieldLabel: string;
+    filledValue: string;
+  }>;
 }
 
 /**

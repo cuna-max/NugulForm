@@ -27,6 +27,20 @@ export interface MissingField {
 }
 
 /**
+ * 자동 기입된 필드 정보
+ */
+export interface FilledField {
+  /** 필드 식별자 (userFields의 id와 매칭) */
+  fieldId: string;
+  /** 폼에서 감지된 레이블 */
+  formLabel: string;
+  /** 저장된 필드 라벨 */
+  fieldLabel: string;
+  /** 기입된 값 */
+  filledValue: string;
+}
+
+/**
  * 자동 채우기 실행 결과
  */
 export interface AutofillResult {
@@ -34,6 +48,8 @@ export interface AutofillResult {
   filledCount: number;
   /** 미기입 필드 목록 */
   missingFields: MissingField[];
+  /** 자동 기입된 필드 목록 */
+  filledFields: FilledField[];
   /** 실행 시간 */
   timestamp: number;
   /** 현재 탭 ID */
@@ -54,6 +70,8 @@ export type AutofillStorageType = BaseStorageType<AutofillState> & {
   isFilled: () => Promise<boolean>;
   /** 미기입 필드 목록 가져오기 */
   getMissingFields: () => Promise<MissingField[]>;
+  /** 자동 기입된 필드 목록 가져오기 */
+  getFilledFields: () => Promise<FilledField[]>;
 };
 
 // =====================
@@ -96,5 +114,10 @@ export const autofillStorage: AutofillStorageType = {
   getMissingFields: async () => {
     const state = await storage.get();
     return state.result?.missingFields ?? [];
+  },
+  /** 자동 기입된 필드 목록 가져오기 */
+  getFilledFields: async () => {
+    const state = await storage.get();
+    return state.result?.filledFields ?? [];
   },
 };
