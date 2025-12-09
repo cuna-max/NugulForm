@@ -36,16 +36,14 @@ export interface UseAutofillContentUIReturn {
 
 /**
  * Content Script에 메시지를 전송
- * Content UI는 Shadow DOM에 주입되므로 현재 활성 탭의 Content Script에 직접 메시지 전송
+ * Content UI는 페이지 컨텍스트에서 실행되므로 Background를 통해 Content Script에 메시지 전달
  */
-const sendMessageToContentScript = async <T>(message: T): Promise<unknown> => {
-  const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
-  if (!tab?.id) {
-    throw new Error('No active tab found');
-  }
-  return chrome.tabs.sendMessage(tab.id, message);
-};
-
+const sendMessageToContentScript = async <T>(message: T): Promise<unknown> =>
+  // Background script에 메시지를 보내서 Content Script로 전달 요청
+  chrome.runtime.sendMessage({
+    type: 'FORWARD_TO_CONTENT_SCRIPT',
+    payload: message,
+  });
 /**
  * UserField에서 MissingField 생성
  */

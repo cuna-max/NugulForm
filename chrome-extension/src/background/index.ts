@@ -80,13 +80,30 @@ exampleThemeStorage.get().then(theme => {
 });
 
 /**
- * Popup 열기 요청 처리
+ * 메시지 리스너
  */
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Popup 열기 요청 처리
   if (message.type === 'OPEN_POPUP') {
     chrome.action.openPopup();
     sendResponse({ success: true });
+    return false;
   }
+
+  // Content UI에서 Content Script로 메시지 전달 요청
+  if (message.type === 'FORWARD_TO_CONTENT_SCRIPT' && sender.tab?.id) {
+    chrome.tabs
+      .sendMessage(sender.tab.id, message.payload)
+      .then(response => {
+        sendResponse(response);
+      })
+      .catch(error => {
+        console.error('[NugulForm] Error forwarding message to content script:', error);
+        sendResponse({ error: String(error) });
+      });
+    return true; // 비동기 응답을 위해 true 반환
+  }
+
   return false;
 });
 
