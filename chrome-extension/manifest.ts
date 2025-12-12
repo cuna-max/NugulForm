@@ -27,6 +27,7 @@ const manifest = {
       // TODO: should get firefox extension id
       id: 'nugulform@cuna-max.com',
       strict_min_version: '109.0',
+      data_collection_permissions: [],
     },
   },
   version: packageJson.version,
