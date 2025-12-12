@@ -31,7 +31,7 @@ const manifest = {
   },
   version: packageJson.version,
   description: '__MSG_extensionDescription__',
-  host_permissions: ['<all_urls>'],
+  host_permissions: ['https://docs.google.com/forms/*'],
   permissions: ['storage', 'tabs', 'sidePanel'],
   options_page: 'options/index.html',
   background: {
@@ -57,7 +57,7 @@ const manifest = {
   },
   content_scripts: [
     {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+      matches: ['https://docs.google.com/forms/*'],
       js: ['content/all.iife.js'],
     },
     {
@@ -65,7 +65,7 @@ const manifest = {
       js: ['content-ui/google-forms.iife.js'],
     },
     {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+      matches: ['https://docs.google.com/forms/*'],
       css: ['content.css'],
     },
   ],
@@ -73,7 +73,7 @@ const manifest = {
   web_accessible_resources: [
     {
       resources: ['*.js', '*.css', '*.svg', '*.png', '*.ico'],
-      matches: ['*://*/*'],
+      matches: ['https://docs.google.com/forms/*'],
     },
   ],
   side_panel: {

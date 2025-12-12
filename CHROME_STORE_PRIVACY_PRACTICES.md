@@ -20,6 +20,6 @@ The tabs permission is required to check whether the currently active browser ta
 
 The sidePanel permission is required to display the extension's side panel UI. It provides an intuitive interface through the side panel when users access extension features or change settings. Users can view saved information or execute auto-fill functionality through the side panel.
 
-## Host Permissions (<all_urls>) Usage Justification
+## Host Permissions (https://docs.google.com/forms/*) Usage Justification
 
-Host permissions are required to provide auto-fill functionality on Google Forms pages (https://docs.google.com/forms/*). The extension needs access to these pages to detect form fields on Google Forms pages and automatically input saved user information into those fields. Additionally, it uses content scripts to analyze the page's DOM structure to find appropriate input fields and fill them with information.
+Host permissions are required to provide auto-fill functionality on Google Forms pages (https://docs.google.com/forms/*). The extension needs access to these pages to detect form fields on Google Forms pages and automatically input saved user information into those fields. Additionally, it uses content scripts to analyze the page's DOM structure to find appropriate input fields and fill them with information. The extension only requests access to Google Forms pages, not all websites, to minimize security concerns and protect user privacy.
