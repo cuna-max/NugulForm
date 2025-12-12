@@ -12,17 +12,9 @@ NugulForm is a Chrome extension that automatically fills in repetitive informati
 
 The storage permission is required to safely store personal information entered by users (such as Telegram Handle, Twitter Handle, wallet addresses, etc.) in the browser's local storage. This permission allows the extension to persistently maintain information that users have saved once, and to load saved information when using auto-fill functionality on Google Forms pages. All data is stored only in the user's browser and is not transmitted to external servers.
 
-## Scripting Permission Usage Justification
-
-The scripting permission is required to dynamically inject scripts into Google Forms pages to execute auto-fill functionality. The extension needs this permission to find form fields on pages, input saved user information into those fields, and select appropriate options when choices are available. This permission enables the extension to automatically fill in Google Forms with information saved by users.
-
 ## Tabs Permission Usage Justification
 
 The tabs permission is required to check whether the currently active browser tab is a Google Forms page and to activate auto-fill functionality on that page. The extension needs access to the current tab's URL information to detect when users visit Google Forms pages and provide auto-fill functionality at the appropriate time. This permission allows the extension to operate only on Google Forms pages.
-
-## Notifications Permission Usage Justification
-
-The notifications permission is used to provide users with notifications about extension status changes or important alerts. For example, it can display notifications when auto-fill operations are completed, or send notifications when extension settings are changed. This allows users to easily understand the extension's operational status.
 
 ## SidePanel Permission Usage Justification
 
