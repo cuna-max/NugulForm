@@ -20,11 +20,10 @@ const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
  */
 const manifest = {
   manifest_version: 3,
-  default_locale: 'en',
+  default_locale: 'ko',
   name: '__MSG_extensionName__',
   browser_specific_settings: {
     gecko: {
-      // TODO: should get firefox extension id
       id: 'nugulform@cuna-max.com',
       strict_min_version: '109.0',
       data_collection_permissions: {
@@ -67,16 +66,12 @@ const manifest = {
       matches: ['https://docs.google.com/forms/*'],
       js: ['content-ui/google-forms.iife.js'],
     },
-    {
-      matches: ['https://docs.google.com/forms/*'],
-      css: ['content.css'],
-    },
   ],
   devtools_page: 'devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', '*.png', '*.ico'],
-      matches: ['https://docs.google.com/forms/*'],
+      resources: ['*.js', '*.css', '*.svg', '*.png'],
+      matches: ['*://*/*'],
     },
   ],
   side_panel: {
