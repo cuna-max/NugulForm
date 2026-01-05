@@ -84,6 +84,7 @@ export const UserFieldInput = ({
           onClick={handleSave}
           disabled={!hasChanges}
           title="저장"
+          tabIndex={-1}
           className={cn(isSaved && 'text-green-500')}>
           {isSaved ? <Check className="h-4 w-4" /> : <Save className="text-primary h-4 w-4" />}
         </Button>
@@ -93,10 +94,11 @@ export const UserFieldInput = ({
           onClick={handleCopy}
           disabled={!value}
           title="복사"
+          tabIndex={-1}
           className={cn(isCopied && 'text-green-500')}>
           {isCopied ? <Check className="h-4 w-4" /> : <Copy className="text-muted-foreground h-4 w-4" />}
         </Button>
-        <Button variant="ghost" size="icon" onClick={handleClear} disabled={!value} title="삭제">
+        <Button variant="ghost" size="icon" onClick={handleClear} disabled={!value} title="삭제" tabIndex={-1}>
           <Trash2 className="text-destructive h-4 w-4" />
         </Button>
       </div>
