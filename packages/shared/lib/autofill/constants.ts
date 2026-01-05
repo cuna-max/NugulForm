@@ -30,6 +30,16 @@ export const FIELD_KEYWORDS: Record<string, string[]> = {
 };
 
 /**
+ * 특정 필드 타입에서 제외할 키워드 목록
+ * - 레이블에 이 키워드가 포함되어 있으면 해당 필드 타입으로 매칭하지 않음
+ * - 예: 트위터 링크를 요구하는 필드는 트위터 핸들로 매칭하지 않음
+ */
+export const EXCLUSION_KEYWORDS: Record<string, string[]> = {
+  [USER_FIELD_IDS.TWITTER]: ['link', 'url', 'http', 'https', '링크', '주소'],
+};
+
+
+/**
  * 긍정 응답 키워드 목록
  * 체크박스/라디오 버튼 자동 선택에 사용
  */

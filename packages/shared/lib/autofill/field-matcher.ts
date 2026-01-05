@@ -2,7 +2,7 @@
 // Field Matcher - Fuse.js 기반 Fuzzy 매칭 엔진
 // =====================
 
-import { FIELD_KEYWORDS, FUSE_OPTIONS, MATCH_SCORE_THRESHOLDS } from './constants.js';
+import { FIELD_KEYWORDS, FUSE_OPTIONS, MATCH_SCORE_THRESHOLDS, EXCLUSION_KEYWORDS } from './constants.js';
 import Fuse from 'fuse.js';
 import type { FieldMatchResult, ParsedFormField } from './types.js';
 
@@ -159,6 +159,23 @@ const findFuzzyMatch = (normalizedLabel: string): FieldMatchResult | null => {
 };
 
 /**
+ * 특정 필드 ID에 대해 제외 키워드가 포함되어 있는지 확인
+ * @param fieldId 필드 ID (예: 'twitter')
+ * @param searchText 정규화된 검색 텍스트
+ * @returns 제외해야 하면 true, 아니면 false
+ */
+const shouldExcludeField = (fieldId: string, searchText: string): boolean => {
+  const exclusionKeywords = EXCLUSION_KEYWORDS[fieldId];
+  if (!exclusionKeywords) return false;
+
+  // 제외 키워드 중 하나라도 포함되어 있으면 제외
+  return exclusionKeywords.some(keyword => {
+    const normalizedKeyword = normalizeText(keyword);
+    return searchText.includes(normalizedKeyword);
+  });
+};
+
+/**
  * 폼 필드에서 매칭할 텍스트 추출
  */
 const extractSearchText = (field: ParsedFormField): string => {
@@ -174,6 +191,9 @@ const extractSearchText = (field: ParsedFormField): string => {
  * 1. 완전 일치 (score = 0)
  * 2. 부분 문자열 매칭 (score < 0.2)
  * 3. Fuzzy 매칭 (score < threshold)
+ * 
+ * 제외 로직:
+ * - 매칭 결과가 있어도 제외 키워드가 포함되어 있으면 null 반환
  */
 export const matchFormField = (field: ParsedFormField): FieldMatchResult | null => {
   const searchText = extractSearchText(field);
@@ -182,14 +202,35 @@ export const matchFormField = (field: ParsedFormField): FieldMatchResult | null 
 
   // 1. 완전 일치 검색
   const exactMatch = findExactMatch(searchText);
-  if (exactMatch) return exactMatch;
+  if (exactMatch) {
+    // 제외 키워드 체크
+    if (shouldExcludeField(exactMatch.userFieldId, searchText)) {
+      return null;
+    }
+    return exactMatch;
+  }
 
   // 2. 부분 문자열 매칭
   const partialMatch = findPartialMatch(searchText);
-  if (partialMatch) return partialMatch;
+  if (partialMatch) {
+    // 제외 키워드 체크
+    if (shouldExcludeField(partialMatch.userFieldId, searchText)) {
+      return null;
+    }
+    return partialMatch;
+  }
 
   // 3. Fuzzy 매칭
-  return findFuzzyMatch(searchText);
+  const fuzzyMatch = findFuzzyMatch(searchText);
+  if (fuzzyMatch) {
+    // 제외 키워드 체크
+    if (shouldExcludeField(fuzzyMatch.userFieldId, searchText)) {
+      return null;
+    }
+    return fuzzyMatch;
+  }
+
+  return null;
 };
 
 /**
