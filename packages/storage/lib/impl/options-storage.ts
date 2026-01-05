@@ -53,6 +53,7 @@ export const AUTO_OPTION_IDS = {
   POSITIVE_AUTO_SELECT: 'positiveAutoSelect',
   FALLBACK_AUTO_SELECT: 'fallbackAutoSelect',
   FLOATING_BUTTON: 'floatingButton',
+  MATH_AUTO_ANSWER: 'mathAutoAnswer',
 } as const;
 
 /**
@@ -66,6 +67,11 @@ export const AUTO_SELECT_OPTION_IDS = [
 ] as const;
 
 /**
+ * 수식 자동 계산 관련 옵션 ID 목록
+ */
+export const MATH_OPTION_IDS = [AUTO_OPTION_IDS.MATH_AUTO_ANSWER] as const;
+
+/**
  * UI 표시 관련 옵션 ID 목록
  */
 export const UI_OPTION_IDS = [AUTO_OPTION_IDS.FLOATING_BUTTON] as const;
@@ -73,6 +79,7 @@ export const UI_OPTION_IDS = [AUTO_OPTION_IDS.FLOATING_BUTTON] as const;
 export type AutoOptionId = (typeof AUTO_OPTION_IDS)[keyof typeof AUTO_OPTION_IDS];
 export type AutoSelectOptionId = (typeof AUTO_SELECT_OPTION_IDS)[number];
 export type UIOptionId = (typeof UI_OPTION_IDS)[number];
+export type MathOptionId = (typeof MATH_OPTION_IDS)[number];
 
 // =====================
 // Option Helpers
@@ -105,6 +112,12 @@ export const isFallbackAutoSelectEnabled = (autoOptions: AutoOption[]): boolean 
  */
 export const isFloatingButtonEnabled = (autoOptions: AutoOption[]): boolean =>
   isOptionEnabled(autoOptions, AUTO_OPTION_IDS.FLOATING_BUTTON);
+
+/**
+ * 봇 방지 수식 자동 계산 옵션이 활성화되어 있는지 확인
+ */
+export const isMathAutoAnswerEnabled = (autoOptions: AutoOption[]): boolean =>
+  isOptionEnabled(autoOptions, AUTO_OPTION_IDS.MATH_AUTO_ANSWER);
 
 /**
  * 자동 선택 옵션들 가져오기 (radio, checkbox, switch에서 사용)
@@ -156,6 +169,12 @@ const DEFAULT_AUTO_OPTIONS: AutoOption[] = [
     id: AUTO_OPTION_IDS.FLOATING_BUTTON,
     title: 'Floating 버튼 표시',
     description: '페이지 우측 하단에 플로팅 버튼을 표시합니다.',
+    enabled: true,
+  },
+  {
+    id: AUTO_OPTION_IDS.MATH_AUTO_ANSWER,
+    title: '봇 방지 수식 자동 계산',
+    description: '수식 문제를 자동으로 계산하여 답변합니다. (예: 2 + 3 = ?)',
     enabled: true,
   },
 ];

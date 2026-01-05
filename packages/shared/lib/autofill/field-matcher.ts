@@ -191,7 +191,7 @@ const extractSearchText = (field: ParsedFormField): string => {
  * 1. 완전 일치 (score = 0)
  * 2. 부분 문자열 매칭 (score < 0.2)
  * 3. Fuzzy 매칭 (score < threshold)
- * 
+ *
  * 제외 로직:
  * - 매칭 결과가 있어도 제외 키워드가 포함되어 있으면 null 반환
  */

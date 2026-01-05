@@ -2,6 +2,7 @@
 // Google Forms DOM Parser
 // =====================
 
+import { extractMathExpression, calculateExpression } from './math-solver.js';
 import type { ParsedFormField, FormFieldType } from './types.js';
 
 /**
@@ -222,6 +223,10 @@ export const parseGoogleFormFields = (): ParsedFormField[] => {
     // 레이블이나 placeholder가 없으면 스킵
     if (!label && !placeholder) return;
 
+    // 수식 감지 및 계산
+    const mathExpression = label ? extractMathExpression(label) : null;
+    const mathResult = mathExpression ? calculateExpression(mathExpression) : null;
+
     const field: ParsedFormField = {
       element: inputElement,
       label,
@@ -230,6 +235,8 @@ export const parseGoogleFormFields = (): ParsedFormField[] => {
       required: isRequired(container),
       currentValue: extractCurrentValue(inputElement),
       elementId: generateElementId(inputElement, index),
+      mathExpression: mathExpression || undefined,
+      mathResult: mathResult !== null ? mathResult : undefined,
     };
 
     fields.push(field);

@@ -27,6 +27,10 @@ export interface ParsedFormField {
   currentValue: string;
   /** 고유 식별자 (DOM 기반) */
   elementId: string;
+  /** 레이블에 포함된 수식 (있는 경우) */
+  mathExpression?: string;
+  /** 수식 계산 결과 */
+  mathResult?: number;
 }
 
 /**
