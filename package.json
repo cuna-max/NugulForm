@@ -27,6 +27,10 @@
     "zip:firefox": "pnpm build:firefox && pnpm -F zipper zip",
     "e2e": "pnpm zip && turbo e2e",
     "e2e:firefox": "pnpm zip:firefox && turbo e2e",
+    "test": "turbo test",
+    "test:watch": "turbo test:watch",
+    "test:ui": "turbo test:ui",
+    "test:coverage": "turbo test:coverage",
     "lint": "turbo lint --continue",
     "lint:fix": "turbo lint:fix --continue",
     "format": "turbo format --continue -- --cache --cache-location node_modules/.cache/.prettiercache",
@@ -51,6 +55,8 @@
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@typescript-eslint/parser": "^8.32.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "deepmerge": "^4.3.1",
@@ -68,6 +74,7 @@
     "globals": "^16.1.0",
     "husky": "^9.1.7",
     "jiti": "^2.4.2",
+    "jsdom": "^26.0.0",
     "lint-staged": "^16.0.0",
     "postcss": "^8.5.3",
     "postcss-load-config": "^6.0.1",
@@ -82,7 +89,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1",
     "vite": "^6.3.6",
-    "vite-plugin-node-polyfills": "^0.23.0"
+    "vite-plugin-node-polyfills": "^0.23.0",
+    "vitest": "^2.1.8"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json}": [

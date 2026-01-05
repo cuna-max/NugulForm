@@ -22,7 +22,18 @@ export const FIELD_KEYWORDS: Record<string, string[]> = {
 
   [USER_FIELD_IDS.YOUTUBE]: ['youtube', 'yt', 'channel', 'handle', '유튜브', '유튭', '채널', '핸들'],
 
-  [USER_FIELD_IDS.PHONE]: ['phone', 'mobile', 'cell', 'telephone', 'tel', '전화번호', '핸드폰', '휴대폰', '연락처'],
+  [USER_FIELD_IDS.PHONE]: [
+    'phone',
+    'mobile',
+    'cell',
+    'telephone',
+    'tel',
+    '전화번호',
+    '전화',
+    '핸드폰',
+    '휴대폰',
+    '연락처',
+  ],
 
   [USER_FIELD_IDS.EVM_WALLET]: ['evm', 'ethereum', 'eth', 'wallet', 'metamask', '지갑', '이더리움'],
 

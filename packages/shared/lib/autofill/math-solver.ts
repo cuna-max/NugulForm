@@ -135,6 +135,11 @@ export const numberToKoreanVariants = (num: number): string[] => {
 export const convertKoreanNumber = (text: string): number | null => {
   const normalized = text.trim().toLowerCase();
 
+  // 빈 문자열 체크 (Number('')는 0을 반환하므로 먼저 체크)
+  if (normalized === '') {
+    return null;
+  }
+
   // 이미 숫자인 경우
   const numValue = Number(normalized);
   if (!isNaN(numValue)) {
@@ -219,8 +224,8 @@ export const calculateExpression = (expression: string): number | null => {
     }
 
     return null;
-  } catch (error) {
-    console.error('[NugulForm] Math calculation error:', error);
+  } catch {
+    // 잘못된 수식은 예상된 입력이므로 조용히 null 반환
     return null;
   }
 };

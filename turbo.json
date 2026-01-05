@@ -21,6 +21,25 @@
       "outputs": ["../../dist/**", "dist/**"],
       "cache": false
     },
+    "test": {
+      "dependsOn": ["ready"],
+      "cache": false
+    },
+    "test:watch": {
+      "dependsOn": ["ready"],
+      "cache": false,
+      "persistent": true
+    },
+    "test:ui": {
+      "dependsOn": ["ready"],
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {
+      "dependsOn": ["ready"],
+      "outputs": ["coverage/**"],
+      "cache": false
+    },
     "e2e": {
       "cache": false
     },
