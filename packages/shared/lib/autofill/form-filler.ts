@@ -325,6 +325,55 @@ export const fillFormField = (
 };
 
 /**
+ * 이메일 응답 수집 체크박스 자동 선택
+ * - Google Forms의 이메일 수집 동의 체크박스를 자동으로 선택
+ * - 자동 선택 옵션이 켜져있을 때 동작 (긍정 응답 또는 기본 응답)
+ */
+export const autoSelectEmailResponseCheckbox = (options: {
+  enablePositiveSelect: boolean;
+  enableFallback: boolean;
+}): boolean => {
+  if (!options.enablePositiveSelect && !options.enableFallback) return false;
+
+  try {
+    // Google Forms의 이메일 응답 수집 체크박스 찾기
+    // 구조: role="checkbox" with aria-label containing "이메일" or "email"
+    const checkboxes = document.querySelectorAll('[role="checkbox"]');
+    
+    for (const checkbox of Array.from(checkboxes)) {
+      const element = checkbox as HTMLElement;
+      const ariaLabel = element.getAttribute('aria-label') || '';
+      const parentText = element.closest('[jscontroller]')?.textContent || '';
+      
+      // 이메일 응답 수집 체크박스 감지
+      // - aria-label에 "이메일" 또는 "email" 포함
+      // - 텍스트에 "응답" 또는 "response" 포함
+      const isEmailCheckbox = 
+        (ariaLabel.toLowerCase().includes('email') || ariaLabel.includes('이메일')) &&
+        (parentText.includes('응답') || parentText.toLowerCase().includes('response') || 
+         parentText.includes('기록') || parentText.toLowerCase().includes('record'));
+      
+      if (isEmailCheckbox) {
+        // 이미 선택된 경우 스킵
+        if (element.getAttribute('aria-checked') === 'true') {
+          return false;
+        }
+        
+        // 체크박스 클릭
+        element.click();
+        element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('[NugulForm] Failed to auto-select email response checkbox:', error);
+    return false;
+  }
+};
+
+/**
  * 특정 필드에 인라인 필 (미기입 필드에 직접 입력)
  */
 export const inlineFillField = (elementId: string, value: string): boolean => {
@@ -347,3 +396,4 @@ export const inlineFillField = (elementId: string, value: string): boolean => {
 
   return false;
 };
+

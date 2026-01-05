@@ -3,7 +3,7 @@
 // =====================
 
 import { matchFormField } from './field-matcher.js';
-import { fillFormFieldAsync, fillSelectionFieldAsync } from './form-filler.js';
+import { fillFormFieldAsync, fillSelectionFieldAsync, autoSelectEmailResponseCheckbox } from './form-filler.js';
 import { parseGoogleFormFields, isGoogleFormsPage } from './google-forms-parser.js';
 import { getAutoSelectOptions } from '@extension/storage';
 import type { AutofillExecuteOptions, AutofillExecuteResult, FieldFillResult, FieldMapping } from './types.js';
@@ -146,6 +146,12 @@ export const executeAutofill = async (options: AutofillExecuteOptions): Promise<
       // 값은 있지만 폼에서 매칭되는 필드가 없음
       // missingFieldIds에는 추가하지 않음 (폼에 해당 필드가 없는 것)
     }
+  }
+
+  // 이메일 응답 수집 체크박스 자동 선택
+  const emailCheckboxSelected = autoSelectEmailResponseCheckbox(autoSelectOptions);
+  if (emailCheckboxSelected) {
+    filledCount++;
   }
 
   return {
