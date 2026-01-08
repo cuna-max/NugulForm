@@ -86,53 +86,16 @@ jobs:
           path: dist-zip/*.zip
           retention-days: 7
 
-      - name: Get Chrome Web Store access token
-        id: chrome_token
-        run: |
-          TOKEN_RESPONSE=$(curl -X POST \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "client_id=${{ env.CHROME_CLIENT_ID }}" \
-            -d "client_secret=${{ env.CHROME_CLIENT_SECRET }}" \
-            -d "refresh_token=${{ env.CHROME_REFRESH_TOKEN }}" \
-            -d "grant_type=refresh_token" \
-            "https://oauth2.googleapis.com/token")
-
-          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
-          echo "token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
-
-      - name: Upload new version to Chrome Web Store
-        run: |
-          ZIP_FILE=$(ls dist-zip/*.zip | head -n 1)
-
-          UPLOAD_RESPONSE=$(curl -X PUT \
-            -H "Authorization: Bearer ${{ steps.chrome_token.outputs.token }}" \
-            -H "x-goog-api-version: 2" \
-            -F "package=@$ZIP_FILE" \
-            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${{ env.CHROME_EXTENSION_ID }}")
-
-          UPLOAD_STATE=$(echo $UPLOAD_RESPONSE | jq -r '.uploadState')
-          echo "Upload state: $UPLOAD_STATE"
-
-          if [ "$UPLOAD_STATE" != "SUCCESS" ]; then
-            echo "Upload failed: $UPLOAD_RESPONSE"
-            exit 1
-          fi
-
-      - name: Publish extension
-        run: |
-          PUBLISH_RESPONSE=$(curl -X POST \
-            -H "Authorization: Bearer ${{ steps.chrome_token.outputs.token }}" \
-            -H "x-goog-api-version: 2" \
-            -H "Content-Length: 0" \
-            "https://www.googleapis.com/chromewebstore/v1.1/items/${{ env.CHROME_EXTENSION_ID }}/publish")
-
-          PUBLISH_STATUS=$(echo $PUBLISH_RESPONSE | jq -r '.status[0]')
-          echo "Publish status: $PUBLISH_STATUS"
-
-          if [ "$PUBLISH_STATUS" != "OK" ]; then
-            echo "Publish failed: $PUBLISH_RESPONSE"
-            exit 1
-          fi
+      - name: Publish Chrome extension to Chrome Web Store
+        uses: MobileFirstLLC/cws-publish@2.1.1
+        with:
+          action: 'publish'
+          client-id: ${{ env.CHROME_CLIENT_ID }}
+          client-secret: ${{ env.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ env.CHROME_REFRESH_TOKEN }}
+          extension-id: ${{ env.CHROME_EXTENSION_ID }}
+          zip-file: dist-zip/*.zip
+          publish-target: 'default'
 
       - name: Update GitHub Release
         if: github.event_name == 'release'
