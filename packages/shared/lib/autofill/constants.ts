@@ -12,21 +12,43 @@ import { USER_FIELD_IDS } from '@extension/storage';
  * - 약어와 다국어 표기만 별도 추가
  */
 export const FIELD_KEYWORDS: Record<string, string[]> = {
-  [USER_FIELD_IDS.TELEGRAM]: ['telegram', 'tele', 'tg', '텔레그램', '텔레', '텔그'],
+  [USER_FIELD_IDS.TELEGRAM]: ['telegram', 'tele', 'tg', 'handle', '텔레그램', '텔레', '텔그', '핸들'],
 
-  [USER_FIELD_IDS.TWITTER]: ['twitter', 'twit', 'x', '트위터', '트윗', '엑스'],
+  [USER_FIELD_IDS.TWITTER]: ['twitter', 'twit', 'x', 'handle', '트위터', '트윗', '엑스', '핸들'],
 
-  [USER_FIELD_IDS.DISCORD]: ['discord', 'disc', '디스코드', '디코'],
+  [USER_FIELD_IDS.DISCORD]: ['discord', 'disc', 'handle', '디스코드', '디코', '핸들'],
 
   [USER_FIELD_IDS.EMAIL]: ['email', 'e-mail', 'mail', '이메일', '메일'],
 
-  [USER_FIELD_IDS.YOUTUBE]: ['youtube', 'yt', 'channel', '유튜브', '유튭', '채널'],
+  [USER_FIELD_IDS.YOUTUBE]: ['youtube', 'yt', 'channel', 'handle', '유튜브', '유튭', '채널', '핸들'],
 
-  [USER_FIELD_IDS.PHONE]: ['phone', 'mobile', 'cell', 'telephone', 'tel', '전화번호', '핸드폰', '휴대폰', '연락처'],
+  [USER_FIELD_IDS.PHONE]: [
+    'phone',
+    'mobile',
+    'cell',
+    'telephone',
+    'tel',
+    '전화번호',
+    '전화',
+    '핸드폰',
+    '휴대폰',
+    '연락처',
+  ],
 
   [USER_FIELD_IDS.EVM_WALLET]: ['evm', 'ethereum', 'eth', 'wallet', 'metamask', '지갑', '이더리움'],
 
   [USER_FIELD_IDS.SOLANA_WALLET]: ['solana', 'sol', 'phantom', 'solflare', '솔라나', '팬텀'],
+
+  [USER_FIELD_IDS.ADDRESS]: [
+    'home address',
+    'residential address',
+    '주소',
+    '집주소',
+    '집 주소',
+    '거주지',
+    '주소지',
+    'home',
+  ],
 };
 
 /**
@@ -36,8 +58,23 @@ export const FIELD_KEYWORDS: Record<string, string[]> = {
  */
 export const EXCLUSION_KEYWORDS: Record<string, string[]> = {
   [USER_FIELD_IDS.TWITTER]: ['link', 'url', 'http', 'https', '링크', '주소'],
+  [USER_FIELD_IDS.ADDRESS]: [
+    'email',
+    'phone',
+    'telegram',
+    'twitter',
+    'discord',
+    'youtube',
+    'wallet',
+    '이메일',
+    '전화',
+    '텔레그램',
+    '트위터',
+    '디스코드',
+    '유튜브',
+    '지갑',
+  ],
 };
-
 
 /**
  * 긍정 응답 키워드 목록

@@ -4,6 +4,7 @@
 
 import { POSITIVE_KEYWORDS } from './constants.js';
 import { parseFormOptions } from './google-forms-parser.js';
+import { extractNumberFromOption, numberToKoreanVariants } from './math-solver.js';
 import type { FormOption } from './google-forms-parser.js';
 import type { ParsedFormField } from './types.js';
 
@@ -337,40 +338,104 @@ export const autoSelectEmailResponseCheckbox = (options: {
 
   try {
     // Google Forms의 이메일 응답 수집 체크박스 찾기
-    // 구조: role="checkbox" with aria-label containing "이메일" or "email"
+    // 구조: role="checkbox"의 조부모 요소에 data-user-email-address 속성이 있음
     const checkboxes = document.querySelectorAll('[role="checkbox"]');
-    
+
     for (const checkbox of Array.from(checkboxes)) {
       const element = checkbox as HTMLElement;
-      const ariaLabel = element.getAttribute('aria-label') || '';
-      const parentText = element.closest('[jscontroller]')?.textContent || '';
-      
+
       // 이메일 응답 수집 체크박스 감지
-      // - aria-label에 "이메일" 또는 "email" 포함
-      // - 텍스트에 "응답" 또는 "response" 포함
-      const isEmailCheckbox = 
-        (ariaLabel.toLowerCase().includes('email') || ariaLabel.includes('이메일')) &&
-        (parentText.includes('응답') || parentText.toLowerCase().includes('response') || 
-         parentText.includes('기록') || parentText.toLowerCase().includes('record'));
-      
-      if (isEmailCheckbox) {
+      // - 가장 가까운 조상 요소에 data-user-email-address 속성이 있는지 확인
+      const emailContainer = element.closest('[data-user-email-address]');
+      const hasEmailAttribute = !!emailContainer;
+
+      if (hasEmailAttribute) {
         // 이미 선택된 경우 스킵
         if (element.getAttribute('aria-checked') === 'true') {
           return false;
         }
-        
+
         // 체크박스 클릭
         element.click();
         element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     console.error('[NugulForm] Failed to auto-select email response checkbox:', error);
     return false;
   }
+};
+
+/**
+ * 수식 답변 채우기 (비동기)
+ * - 텍스트 필드: 계산 결과를 문자열로 입력
+ * - 선택 필드 (radio/checkbox/select): 옵션에서 계산 결과와 일치하는 항목 선택
+ */
+export const fillMathAnswerAsync = async (
+  field: ParsedFormField,
+  options: {
+    enableMathAutoAnswer: boolean;
+  },
+): Promise<boolean> => {
+  // 옵션이 비활성화되어 있거나 수식 결과가 없으면 스킵
+  if (!options.enableMathAutoAnswer || field.mathResult === undefined) {
+    return false;
+  }
+
+  const result = field.mathResult;
+
+  // 텍스트 필드: 숫자를 문자열로 입력
+  if (field.type === 'text' || field.type === 'textarea') {
+    return fillTextField(field.element, String(result));
+  }
+
+  // 선택 필드: 옵션에서 일치하는 항목 찾기
+  if (field.type === 'radio' || field.type === 'checkbox' || field.type === 'select') {
+    const formOptions = parseFormOptions(field.element);
+    if (formOptions.length === 0) return false;
+
+    // 이미 선택된 옵션이 있으면 스킵
+    const hasSelected = formOptions.some(opt => opt.selected);
+    if (hasSelected) return false;
+
+    // 결과와 일치하는 옵션 찾기
+    // 1. 정확한 숫자 매칭
+    // 2. 한글 숫자 매칭
+    const resultVariants = numberToKoreanVariants(result);
+
+    for (const option of formOptions) {
+      const optionNumber = extractNumberFromOption(option.text);
+
+      // 숫자 추출 성공 시 비교
+      if (optionNumber !== null && optionNumber === result) {
+        // 드롭다운인지 확인
+        const isDropdown = field.element.getAttribute('role') === 'listbox';
+        if (isDropdown) {
+          return selectDropdownOptionAsync(field.element, option.element);
+        }
+        return clickOption(option.element);
+      }
+
+      // 한글 매칭 (정확한 일치)
+      const normalizedOptionText = option.text.trim();
+      for (const variant of resultVariants) {
+        if (normalizedOptionText === variant || normalizedOptionText.includes(variant)) {
+          const isDropdown = field.element.getAttribute('role') === 'listbox';
+          if (isDropdown) {
+            return selectDropdownOptionAsync(field.element, option.element);
+          }
+          return clickOption(option.element);
+        }
+      }
+    }
+
+    return false;
+  }
+
+  return false;
 };
 
 /**
@@ -396,4 +461,3 @@ export const inlineFillField = (elementId: string, value: string): boolean => {
 
   return false;
 };
-

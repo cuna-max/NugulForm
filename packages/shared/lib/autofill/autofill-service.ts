@@ -3,9 +3,14 @@
 // =====================
 
 import { matchFormField } from './field-matcher.js';
-import { fillFormFieldAsync, fillSelectionFieldAsync, autoSelectEmailResponseCheckbox } from './form-filler.js';
+import {
+  fillFormFieldAsync,
+  fillSelectionFieldAsync,
+  autoSelectEmailResponseCheckbox,
+  fillMathAnswerAsync,
+} from './form-filler.js';
 import { parseGoogleFormFields, isGoogleFormsPage } from './google-forms-parser.js';
-import { getAutoSelectOptions } from '@extension/storage';
+import { getAutoSelectOptions, isMathAutoAnswerEnabled } from '@extension/storage';
 import type { AutofillExecuteOptions, AutofillExecuteResult, FieldFillResult, FieldMapping } from './types.js';
 import type { UserField } from '@extension/storage';
 
@@ -51,6 +56,7 @@ export const executeAutofill = async (options: AutofillExecuteOptions): Promise<
   }
 
   const autoSelectOptions = getAutoSelectOptions(autoOptions);
+  const enableMathAutoAnswer = isMathAutoAnswerEnabled(autoOptions);
 
   const mappings = createFieldMappings(userFields);
   const fieldResults: FieldFillResult[] = [];
@@ -66,6 +72,25 @@ export const executeAutofill = async (options: AutofillExecuteOptions): Promise<
   // 각 필드 순차적으로 처리 (드롭다운 열기/닫기 위해 순차 실행 필요)
   for (const mapping of mappings) {
     const { formField, userField, matchResult } = mapping;
+
+    // 우선순위 1: 수식 답변 (봇 방지 질문)
+    if (formField.mathExpression && formField.mathResult !== undefined && enableMathAutoAnswer) {
+      const filled = await fillMathAnswerAsync(formField, { enableMathAutoAnswer });
+
+      if (filled) {
+        filledCount++;
+        fieldResults.push({
+          formLabel: formField.label,
+          userFieldId: null,
+          filled: true,
+          filledValue: `[math: ${formField.mathResult}]`,
+          failReason: undefined,
+        });
+        // 수식 답변 성공 시 다음 필드로
+        continue;
+      }
+      // 수식 답변 실패 시 일반 로직으로 계속 진행
+    }
 
     // 텍스트 필드: 매칭된 사용자 필드 값으로 채우기
     if (formField.type === 'text' || formField.type === 'textarea') {

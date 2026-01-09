@@ -20,8 +20,19 @@ export {
   fillFormFieldAsync,
   fillSelectionField,
   fillSelectionFieldAsync,
+  fillMathAnswerAsync,
   inlineFillField,
 } from './form-filler.js';
+
+// Math Solver
+export {
+  extractMathExpression,
+  calculateExpression,
+  convertKoreanNumber,
+  numberToKoreanVariants,
+  extractAndCalculate,
+  extractNumberFromOption,
+} from './math-solver.js';
 
 // Autofill Service
 export { executeAutofill } from './autofill-service.js';

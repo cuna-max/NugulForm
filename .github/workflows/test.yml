@@ -1,0 +1,144 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+# 동시 실행 제어: 같은 브랜치/PR에서는 최신 실행만 유지
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+          run_install: false
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Generate coverage report
+        run: pnpm test:coverage
+        continue-on-error: true
+
+      - name: Upload coverage to artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            packages/shared/coverage
+          retention-days: 30
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            try {
+              // coverage-summary.json 읽기
+              const summaryPath = path.join(process.cwd(), 'packages/shared/coverage/coverage-summary.json');
+              if (fs.existsSync(summaryPath)) {
+                const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+                const total = summary.total;
+                
+                const comment = `## 📊 Test Coverage Report
+                
+                | Metric | Coverage |
+                |--------|----------|
+                | Lines | ${total.lines.pct.toFixed(2)}% |
+                | Statements | ${total.statements.pct.toFixed(2)}% |
+                | Functions | ${total.functions.pct.toFixed(2)}% |
+                | Branches | ${total.branches.pct.toFixed(2)}% |
+                
+                <details>
+                <summary>View detailed coverage</summary>
+                
+                Generated on: ${new Date().toISOString()}
+                
+                </details>`;
+                
+                // PR에 코멘트 추가
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: comment
+                });
+              }
+            } catch (error) {
+              console.log('Failed to post coverage comment:', error);
+            }
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.test.result }}" == "success" ]; then
+            echo "✅ All tests passed!"
+            exit 0
+          else
+            echo "❌ Tests failed!"
+            exit 1
+          fi

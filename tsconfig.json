@@ -8,5 +8,5 @@
     "target": "ESNext",
     "types": ["node"]
   },
-  "include": ["eslint.config.ts"]
+  "include": ["eslint.config.ts", "vitest.config.ts", "packages/*/vitest.config.ts"]
 }
