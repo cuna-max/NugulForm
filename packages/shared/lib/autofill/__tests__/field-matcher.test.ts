@@ -90,6 +90,16 @@ describe('Field Matcher', () => {
       expect(result?.matchType).toBe('exact');
     });
 
+    it('한글 주소 키워드 완전 일치', () => {
+      const field = createMockField('주소');
+      const result = matchFormField(field);
+
+      expect(result).not.toBeNull();
+      expect(result?.userFieldId).toBe(USER_FIELD_IDS.ADDRESS);
+      expect(result?.score).toBe(0);
+      expect(result?.matchType).toBe('exact');
+    });
+
     it('대소문자 무시: EMAIL → email', () => {
       const field = createMockField('EMAIL');
       const result = matchFormField(field);
@@ -537,6 +547,14 @@ describe('Field Matcher', () => {
 
       expect(result).not.toBeNull();
       expect(result?.userFieldId).toBe(USER_FIELD_IDS.PHONE);
+    });
+
+    it('한글 주소 키워드 매칭', () => {
+      const field = createMockField('상품 지급을 위한 정확한 집 주소를 입력해주세요.');
+      const result = matchFormField(field);
+
+      expect(result).not.toBeNull();
+      expect(result?.userFieldId).toBe(USER_FIELD_IDS.ADDRESS);
     });
   });
 

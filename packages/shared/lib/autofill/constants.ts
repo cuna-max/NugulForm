@@ -38,6 +38,18 @@ export const FIELD_KEYWORDS: Record<string, string[]> = {
   [USER_FIELD_IDS.EVM_WALLET]: ['evm', 'ethereum', 'eth', 'wallet', 'metamask', '지갑', '이더리움'],
 
   [USER_FIELD_IDS.SOLANA_WALLET]: ['solana', 'sol', 'phantom', 'solflare', '솔라나', '팬텀'],
+
+  [USER_FIELD_IDS.ADDRESS]: [
+    'address',
+    'home address',
+    'residential address',
+    '주소',
+    '집주소',
+    '집 주소',
+    '거주지',
+    '주소지',
+    'home',
+  ],
 };
 
 /**

@@ -46,6 +46,7 @@ export const USER_FIELD_IDS = {
   PHONE: 'phone',
   EVM_WALLET: 'evm_wallet',
   SOLANA_WALLET: 'solana_wallet',
+  ADDRESS: 'address',
   /** 추가 가능한 필드 - 추후 확장용 */
 } as const;
 
@@ -150,6 +151,7 @@ const DEFAULT_USER_FIELDS: UserField[] = [
   },
   { id: USER_FIELD_IDS.YOUTUBE, label: 'YouTube Channel', value: '', placeholder: '@channelname' },
   { id: USER_FIELD_IDS.PHONE, label: 'Phone Number', value: '', placeholder: '010-1234-5678' },
+  { id: USER_FIELD_IDS.ADDRESS, label: 'Home Address', value: '', placeholder: '123 Main St, City, State 12345' },
 ];
 
 const DEFAULT_AUTO_OPTIONS: AutoOption[] = [

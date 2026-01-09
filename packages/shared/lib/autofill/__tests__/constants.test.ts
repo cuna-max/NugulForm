@@ -27,6 +27,7 @@ describe('Constants', () => {
         USER_FIELD_IDS.PHONE,
         USER_FIELD_IDS.EVM_WALLET,
         USER_FIELD_IDS.SOLANA_WALLET,
+        USER_FIELD_IDS.ADDRESS,
       ];
 
       expectedFieldIds.forEach(fieldId => {
