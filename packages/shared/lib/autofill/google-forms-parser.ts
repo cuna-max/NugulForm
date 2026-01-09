@@ -96,7 +96,7 @@ const extractLabel = (container: Element): string => {
   // 1. role="heading" 요소에서 추출
   const heading = container.querySelector(SELECTORS.QUESTION_TITLE);
   if (heading?.textContent) {
-    return heading.textContent.replace(/\*$/, '').trim();
+    return heading.textContent.trim();
   }
 
   // 2. data-params 속성에서 추출 시도
@@ -105,7 +105,10 @@ const extractLabel = (container: Element): string => {
     try {
       // Google Forms의 data-params는 특수 형식이므로 텍스트 추출 시도
       const match = dataParams.match(/\["([^"]+)"/);
-      if (match?.[1]) return match[1];
+      if (match?.[1]) {
+        // 이스케이프된 문자를 처리
+        return match[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      }
     } catch {
       // 파싱 실패 무시
     }
@@ -114,7 +117,7 @@ const extractLabel = (container: Element): string => {
   // 3. 첫 번째 span에서 추출
   const firstSpan = container.querySelector('span');
   if (firstSpan?.textContent) {
-    return firstSpan.textContent.replace(/\*$/, '').trim();
+    return firstSpan.textContent.trim();
   }
 
   return '';
@@ -143,9 +146,9 @@ const isRequired = (container: Element): boolean => {
   const input = container.querySelector('input, textarea');
   if (input?.hasAttribute('required')) return true;
 
-  // * 표시 확인
-  const heading = container.querySelector(SELECTORS.QUESTION_TITLE);
-  if (heading?.textContent?.includes('*')) return true;
+  // 라벨에서 * 표시 확인
+  const label = extractLabel(container);
+  if (label.includes('*')) return true;
 
   return false;
 };

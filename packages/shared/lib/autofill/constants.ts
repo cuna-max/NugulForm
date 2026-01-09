@@ -40,7 +40,6 @@ export const FIELD_KEYWORDS: Record<string, string[]> = {
   [USER_FIELD_IDS.SOLANA_WALLET]: ['solana', 'sol', 'phantom', 'solflare', '솔라나', '팬텀'],
 
   [USER_FIELD_IDS.ADDRESS]: [
-    'address',
     'home address',
     'residential address',
     '주소',
@@ -59,6 +58,22 @@ export const FIELD_KEYWORDS: Record<string, string[]> = {
  */
 export const EXCLUSION_KEYWORDS: Record<string, string[]> = {
   [USER_FIELD_IDS.TWITTER]: ['link', 'url', 'http', 'https', '링크', '주소'],
+  [USER_FIELD_IDS.ADDRESS]: [
+    'email',
+    'phone',
+    'telegram',
+    'twitter',
+    'discord',
+    'youtube',
+    'wallet',
+    '이메일',
+    '전화',
+    '텔레그램',
+    '트위터',
+    '디스코드',
+    '유튜브',
+    '지갑',
+  ],
 };
 
 /**

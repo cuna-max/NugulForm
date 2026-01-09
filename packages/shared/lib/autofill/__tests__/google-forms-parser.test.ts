@@ -72,6 +72,11 @@ describe('Google Forms Parser', () => {
       const container = document.createElement('div');
       container.setAttribute('data-params', '[[1552499373,["봇 방지\\n\\n1+1= ?"],null,2]]');
 
+      // 수식 질문의 경우에도 input 요소가 있어야 함
+      const input = document.createElement('input');
+      input.type = 'text';
+      container.appendChild(input);
+
       const radiogroup = document.createElement('div');
       radiogroup.setAttribute('role', 'radiogroup');
       container.appendChild(radiogroup);
