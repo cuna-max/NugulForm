@@ -338,25 +338,18 @@ export const autoSelectEmailResponseCheckbox = (options: {
 
   try {
     // Google Forms의 이메일 응답 수집 체크박스 찾기
-    // 구조: role="checkbox" with aria-label containing "이메일" or "email"
+    // 구조: role="checkbox"의 조부모 요소에 data-user-email-address 속성이 있음
     const checkboxes = document.querySelectorAll('[role="checkbox"]');
 
     for (const checkbox of Array.from(checkboxes)) {
       const element = checkbox as HTMLElement;
-      const ariaLabel = element.getAttribute('aria-label') || '';
-      const parentText = element.closest('[jscontroller]')?.textContent || '';
 
       // 이메일 응답 수집 체크박스 감지
-      // - aria-label에 "이메일" 또는 "email" 포함
-      // - 텍스트에 "응답" 또는 "response" 포함
-      const isEmailCheckbox =
-        (ariaLabel.toLowerCase().includes('email') || ariaLabel.includes('이메일')) &&
-        (parentText.includes('응답') ||
-          parentText.toLowerCase().includes('response') ||
-          parentText.includes('기록') ||
-          parentText.toLowerCase().includes('record'));
+      // - 가장 가까운 조상 요소에 data-user-email-address 속성이 있는지 확인
+      const emailContainer = element.closest('[data-user-email-address]');
+      const hasEmailAttribute = !!emailContainer;
 
-      if (isEmailCheckbox) {
+      if (hasEmailAttribute) {
         // 이미 선택된 경우 스킵
         if (element.getAttribute('aria-checked') === 'true') {
           return false;
